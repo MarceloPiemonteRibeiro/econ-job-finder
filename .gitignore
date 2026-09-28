@@ -1,0 +1,14 @@
+# Secrets — Gmail app password, GitHub token, IHEID login
+credentials.local
+
+# Local state, not needed for reproduction
+seen.db
+watcher.log
+dashboard.html
+__pycache__/
+*.pyc
+
+# Local development files
+.vscode/
+.idea/
+*.swp

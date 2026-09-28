@@ -1,0 +1,634 @@
+<title>Econ Job Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..600&display=swap">
+<style>
+/* Template for watcher.py → dashboard.html. The watcher fills the #data script tag with the day's roles + sources. */
+:root {
+  color-scheme: light;
+  --paper: #efe7d6;
+  --raised: #f7f2e7;
+  --ink: #1b1915;
+  --ink-2: #5f584c;
+  --ink-3: #857c6d;
+  --rule: #d8ccb3;
+  --accent: #cf4520;
+  --red: #b3261e;
+  --ok-bg: #e3efcb; --ok-line: #bfd894; --ok-ink: #385c11;
+  --warn-bg: #f5e6b8; --warn-line: #e0c36d; --warn-ink: #735300;
+  --bad-bg: #f5dcd5; --bad-line: #e5b4a7; --bad-ink: #962a19;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #171512; --raised: #221f1a; --ink: #f5efe3; --ink-2: #b3aa98; --ink-3: #8b8273;
+    --rule: #38332b; --accent: #f06a41; --red: #ff7b6b;
+    --ok-bg: #233019; --ok-line: #3a5224; --ok-ink: #b6da88;
+    --warn-bg: #332a10; --warn-line: #5a4a1a; --warn-ink: #e8c66e;
+    --bad-bg: #3a1e19; --bad-line: #603028; --bad-ink: #f4a08f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #171512; --raised: #221f1a; --ink: #f5efe3; --ink-2: #b3aa98; --ink-3: #8b8273;
+  --rule: #38332b; --accent: #f06a41; --red: #ff7b6b;
+  --ok-bg: #233019; --ok-line: #3a5224; --ok-ink: #b6da88;
+  --warn-bg: #332a10; --warn-line: #5a4a1a; --warn-ink: #e8c66e;
+  --bad-bg: #3a1e19; --bad-line: #603028; --bad-ink: #f4a08f;
+}
+[hidden] { display: none !important; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--serif); -webkit-text-size-adjust: 100%; }
+a { color: inherit; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 44px); padding-block: 28px 72px; }
+
+.eyebrow { font: 500 11px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); margin: 0; }
+.n { font: 400 12px/1.3 var(--mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* masthead — catalog card */
+.top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; }
+h1 { font: 600 clamp(46px, 8.2vw, 88px)/1 var(--serif); letter-spacing: -.025em; margin: 64px 0 24px; text-wrap: balance; }
+h1 .dot { color: var(--accent); }
+.lede { font: italic 400 clamp(17px, 2.1vw, 20px)/1.45 var(--serif); color: var(--ink-2); max-width: 70ch; margin: 22px 0 0; text-wrap: pretty; }
+.kv { display: flex; flex-wrap: wrap; gap: 14px 48px; margin: 0; padding-block: 16px; border-block: 1px solid var(--rule); }
+.kv div { display: grid; gap: 4px; }
+.kv dt { font: 500 10.5px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+.kv dd { margin: 0; font: 500 17px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+
+.tabs { display: flex; gap: 32px; margin-top: 30px; border-bottom: 1px solid var(--rule); }
+.tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; margin: 0 0 -1px; padding: 12px 0;
+  font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .n { margin-left: 8px; }
+
+/* roles: facets | list */
+.roles { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 48px; margin-top: 30px; align-items: start; }
+.facets { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 28px;
+  max-height: calc(100vh - 32px); overflow-y: auto; padding-inline: 10px 6px; margin-left: -10px;
+  scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+.facet { display: grid; gap: 10px; }
+details.facet > summary { cursor: pointer; list-style: none; }
+details.facet > summary::-webkit-details-marker { display: none; }
+details.facet > summary::after { content: '▾'; float: right; color: var(--ink-3); font-size: 12px; transition: transform .15s; }
+details.facet:not([open]) > summary::after { transform: rotate(-90deg); }
+.board-tag { display: inline-block; font: 600 10px/1 var(--mono); letter-spacing: .06em; padding: 2px 6px; border-radius: 4px; background: #1a6dd4; color: #fff; vertical-align: middle; margin-left: 6px; }
+input[type="search"] { width: 100%; font: 400 15px/1.3 var(--serif); color: var(--ink); background: var(--raised);
+  border: 1px solid var(--rule); border-radius: 8px; padding: 9px 12px; }
+input[type="search"]::placeholder { color: var(--ink-3); }
+.check { display: flex; align-items: center; gap: 8px; font-size: 15px; cursor: pointer; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.tree { display: grid; gap: 1px; margin-left: -10px; }
+.row { appearance: none; border: 0; background: none; margin: 0; width: 100%; display: flex; align-items: baseline;
+  justify-content: space-between; gap: 12px; padding: 6px 10px; border-radius: 6px; text-align: left; cursor: pointer;
+  font: 400 15.5px/1.3 var(--serif); color: var(--ink); }
+.row:hover { background: var(--raised); }
+.row.l2 { padding-left: 26px; font-size: 14.5px; color: var(--ink-2); }
+.row.zero { opacity: .45; }
+.row[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.row[aria-pressed="true"] .n { color: var(--paper); opacity: .75; }
+
+.rhead { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--ink); }
+.rhead p { flex: 1; }
+select.chip { background: var(--bg); }
+.rhead p { margin: 0; font: italic 400 17px/1.3 var(--serif); color: var(--ink-2); }
+.chip { appearance: none; background: none; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px; margin: 0;
+  display: inline-flex; align-items: baseline; gap: 8px; font: 500 11px/1.2 var(--mono); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-2); cursor: pointer; }
+.chip:hover { border-color: var(--ink-3); color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.chip[aria-pressed="true"] .n { color: var(--paper); opacity: .75; }
+
+.grp { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 38px 0 0; padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule); font: 600 12px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+button.grp.cat { appearance: none; background: none; color: inherit; border: 0; border-bottom: 1px solid var(--rule);
+  width: 100%; text-align: left; padding: 12px 0 8px; margin-top: 20px; cursor: pointer;
+  align-items: center; justify-content: flex-start; }
+button.grp.cat:hover { color: var(--accent); }
+button.grp.cat .cat-name { flex: 1; }
+button.grp.cat .caret { display: inline-block; margin-right: 8px; transition: transform 0.15s ease; color: var(--ink-3); }
+button.grp.cat.open .caret { transform: rotate(90deg); color: var(--ink); }
+button.grp.cat[aria-expanded="true"] { color: var(--ink); }
+.results > div > .grp:first-child, #s-list > .grp:first-child { margin-top: 22px; }
+.sub { display: flex; align-items: baseline; gap: 10px; margin: 22px 0 0; font: italic 400 18px/1.3 var(--serif); color: var(--ink-2); }
+.jobs, .srcs { list-style: none; margin: 0; padding: 0; }
+/* job card: bold title / location / employer (via source) + red deadline / extra details */
+.job { position: relative; display: grid; gap: 2px; padding: 14px 0 15px; border-bottom: 1px solid var(--rule); }
+.job .t { font: 700 18.5px/1.3 var(--serif); color: var(--ink); text-decoration: none; margin-bottom: 3px;
+  text-wrap: pretty; overflow-wrap: anywhere; }
+a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.job.is-new .t::before { content: ""; display: inline-block; width: .38em; height: .38em; margin: 0 .45em .12em 0;
+  border-radius: 50%; background: var(--accent); }
+.ln { font: 400 15px/1.45 var(--serif); color: var(--ink-2); overflow-wrap: anywhere; }
+.ln.none { font-style: italic; color: var(--ink-3); }
+.ln.who { display: flex; flex-wrap: wrap; column-gap: 14px; }
+.due { color: var(--red); font-weight: 600; }
+.due.past { color: var(--ink-3); font-weight: 400; }
+.ln.det { font-size: 14px; font-style: italic; color: var(--ink-3); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 16px; font: 400 14.5px/1.45 var(--serif); color: var(--ink-2); }
+.meta .via { font: 400 12px/1.6 var(--mono); color: var(--ink-3); }
+.empty { padding: 40px 0; display: grid; justify-items: start; gap: 12px; }
+.empty p { margin: 0; font: italic 400 19px/1.4 var(--serif); color: var(--ink-2); }
+
+/* sources */
+.sbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; margin-top: 30px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sbar input { max-width: 320px; }
+.hint { margin: 14px 0 0; font: italic 400 16px/1.45 var(--serif); color: var(--ink-2); max-width: 70ch; }
+.src { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 16px; padding: 11px 0; border-bottom: 1px solid var(--rule); }
+.src .name { font: 500 17px/1.3 var(--serif); text-decoration: none; overflow-wrap: anywhere; }
+.src .meta { grid-column: 1 / -1; }
+.src .note { font-style: italic; }
+.pill { justify-self: end; font: 500 10.5px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+  padding: 5px 9px; border: 1px solid var(--rule); border-radius: 999px; color: var(--ink-3); }
+.pill.ok { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-ink); }
+.pill.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
+.pill.bad { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad-ink); }
+.chip.sub { border-style: dashed; font-style: italic; }
+#s-chips { flex-direction: column; align-items: flex-start; gap: 14px; }
+.chip-grp { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.chip-grp .subs { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 20px; }
+.sbar { align-items: flex-start; }
+
+@media (max-width: 860px) {
+  h1 { margin-top: 40px; }
+  .roles { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .facets { position: static; max-height: none; overflow: visible; padding-inline: 0; margin-left: 0; gap: 20px; }
+  .tree { display: flex; flex-wrap: wrap; gap: 6px; margin-left: 0; }
+  .row, .row.l2 { width: auto; padding: 5px 11px; border: 1px solid var(--rule); border-radius: 999px; font-size: 14.5px; gap: 8px; }
+  .row.l2 { border-style: dashed; }
+  .sbar input { max-width: none; }
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Map tab */
+:root {
+  --m0: #efe5cf; --m1: #f2caa2; --m2: #eaa676; --m3: #d97a4a; --m4: #b8532a; --m5: #7f2e14;
+}
+:root:not([data-theme="light"]) { --m0: #2a251d; --m1: #4a3421; --m2: #6b4525; --m3: #96552a; --m4: #c46a35; --m5: #f28147; }
+:root[data-theme="light"] { --m0: #efe5cf; --m1: #f2caa2; --m2: #eaa676; --m3: #d97a4a; --m4: #b8532a; --m5: #7f2e14; }
+:root[data-theme="dark"] { --m0: #2a251d; --m1: #4a3421; --m2: #6b4525; --m3: #96552a; --m4: #c46a35; --m5: #f28147; }
+.map-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin: 24px 0 12px; }
+.map-head p { margin: 0; font: italic 400 17px/1.3 var(--serif); color: var(--ink-2); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px; font: 500 11px/1 var(--mono); letter-spacing: .06em; color: var(--ink-2); }
+.map-legend .cell { display: flex; align-items: center; gap: 6px; }
+.map-legend .sw { width: 18px; height: 12px; border-radius: 2px; border: 1px solid var(--rule); display: inline-block; }
+.map-wrap { position: relative; }
+.worldmap { width: 100%; height: auto; display: block; }
+.worldmap path { fill: var(--m0); stroke: var(--paper); stroke-width: 0.4; transition: fill 0.15s ease; cursor: default; }
+.worldmap path[data-b="1"] { fill: var(--m1); }
+.worldmap path[data-b="2"] { fill: var(--m2); }
+.worldmap path[data-b="3"] { fill: var(--m3); }
+.worldmap path[data-b="4"] { fill: var(--m4); }
+.worldmap path[data-b="5"] { fill: var(--m5); }
+.worldmap path[data-hit] { cursor: pointer; }
+.worldmap path[data-hit]:hover, .worldmap path.selected { stroke: var(--ink); stroke-width: 1.2; }
+.map-tt { position: absolute; pointer-events: none; background: var(--ink); color: var(--paper); padding: 6px 10px;
+  border-radius: 6px; font: 500 13px/1.3 var(--mono); white-space: nowrap; transform: translate(-50%, -110%); z-index: 5; }
+.map-tt strong { font-weight: 600; }
+#m-top { margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 4px 24px; }
+#m-top h3 { margin: 12px 0 4px; font: 600 12px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); grid-column: 1 / -1; }
+#m-top .row { padding: 4px 0; }
+</style>
+
+<noscript><p class="wrap">This dashboard needs JavaScript. Open the file in a web browser (Chrome, Edge, Firefox or Safari).</p></noscript>
+<div class="wrap">
+  <header>
+    <div class="top eyebrow"><span>Economics job market · 2026–27</span><span id="stamp"></span></div>
+    <h1>Econ Job Finder<span class="dot">.</span></h1>
+    <dl class="kv">
+      <div><dt>Open roles</dt><dd id="k-roles">–</dd></div>
+      <div><dt>New since last run</dt><dd id="k-new">–</dd></div>
+      <div><dt>Sources tracked</dt><dd id="k-src">–</dd></div>
+    </dl>
+    <p class="lede" id="lede"></p>
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button type="button" class="tab" id="t-roles" role="tab" aria-controls="v-roles" aria-selected="true">Roles<span class="n"></span></button>
+      <button type="button" class="tab" id="t-map" role="tab" aria-controls="v-map" aria-selected="false">Map</button>
+      <button type="button" class="tab" id="t-sources" role="tab" aria-controls="v-sources" aria-selected="false">Sources<span class="n"></span></button>
+    </nav>
+  </header>
+
+  <section id="v-roles" class="roles" role="tabpanel" aria-labelledby="t-roles">
+    <aside class="facets">
+      <div class="facet">
+        <label class="eyebrow" for="q">Search</label>
+        <input id="q" type="search" placeholder="Title, employer, city…" autocomplete="off">
+        <label class="check"><input id="fresh" type="checkbox" autocomplete="off">New since last run only</label>
+      </div>
+      <details class="facet" open><summary class="eyebrow">Job type</summary><div class="tree" id="f-type"></div></details>
+      <details class="facet" open><summary class="eyebrow">Location</summary><div class="tree" id="f-place"></div></details>
+      <details class="facet" open><summary class="eyebrow">EJM / JOE</summary><div class="tree" id="f-board"></div></details>
+      <details class="facet" open><summary class="eyebrow">Deadline</summary><div class="tree" id="f-due"></div></details>
+    </aside>
+    <div class="results">
+      <div class="rhead"><p id="r-count"></p><select id="r-sort" class="chip"><option value="default">Sort: Default</option><option value="deadline">Sort: Deadline</option><option value="az">Sort: A–Z</option><option value="loc">Sort: Location</option><option value="emp">Sort: Employer</option></select><button type="button" class="chip" id="r-clear" hidden>Clear filters</button></div>
+      <div id="r-list"></div>
+    </div>
+  </section>
+
+  <section id="v-map" role="tabpanel" aria-labelledby="t-map" hidden>
+    <div class="map-head">
+      <p id="m-count"></p>
+      <div class="map-legend" id="m-legend" aria-label="Roles per country"></div>
+    </div>
+    <div class="map-wrap">
+      __WORLDMAP__
+      <div id="m-tt" class="map-tt" hidden></div>
+    </div>
+    <p class="hint">Every role has a country from its listing (or its employer, when the listing gives a region). Click a country to filter the Roles tab to it; click again to clear.</p>
+    <div id="m-top"></div>
+  </section>
+
+  <section id="v-sources" role="tabpanel" aria-labelledby="t-sources" hidden>
+    <div class="sbar">
+      <div class="chips" id="s-chips"></div>
+      <input id="sq" type="search" placeholder="Search sources…" aria-label="Search sources" autocomplete="off">
+    </div>
+    <p class="hint">Status from your Source Tracker. Directly: the watcher pulls the roles every morning. Via alert: roles reach you through email alerts. Blocked: can't be scraped yet, so set an alert or check the link yourself. Ignored: not a job feed, or checked by hand (EJM, JOE).</p>
+    <div id="s-list"></div>
+  </section>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('data').textContent);
+  const $ = s => document.querySelector(s);
+  const SEP = '::';
+  const key = (a, b) => (b ? a + SEP + b : a);
+  const fmt = n => n.toLocaleString('en');
+  const S = { type: '', place: '', due: '', q: '', fresh: false, board: '', status: '', sq: '' };
+
+  // Tiny DOM builder: every scraped string goes in as text, never as HTML.
+  function el(tag, props, ...kids) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(props || {})) {
+      if (v == null || v === false) continue;
+      if (k === 'class') e.className = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? '' : String(v));
+    }
+    for (const k of kids.flat()) if (k != null && k !== false && k !== '') e.append(k);
+    return e;
+  }
+  const group = (rows, A, B) => {
+    const m = new Map();
+    for (const r of rows) {
+      if (!m.has(A(r))) m.set(A(r), new Map());
+      const g = m.get(A(r));
+      if (!g.has(B(r))) g.set(B(r), []);
+      g.get(B(r)).push(r);
+    }
+    return m;
+  };
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  for (const r of D.roles) {
+    r.hay = [r.title, r.employer, r.source, r.loc, r.country, ...r.details].join(' ').toLowerCase();
+    r.days = r.due ? Math.round((new Date(r.due + 'T00:00:00') - today) / 864e5) : null;   // counted from the day you open it
+  }
+  for (const s of D.sources) s.hay = [s.name, s.note, s.how, s.cat, s.sub].join(' ').toLowerCase();
+
+  // Deadline buckets; the first three are cumulative ("within 1 week" includes "within 1 day").
+  const DUE = [
+    ['d1', 'Within 1 day', d => d != null && d >= 0 && d <= 1],
+    ['w1', 'Within 1 week', d => d != null && d >= 0 && d <= 7],
+    ['m1', 'Within 1 month', d => d != null && d >= 0 && d <= 30],
+    ['m1+', 'More than 1 month', d => d != null && d > 30],
+    ['none', 'Not informed', d => d == null],
+    ['past', 'Deadline passed', d => d != null && d < 0],
+  ];
+  const dueOk = r => !S.due || DUE.find(o => o[0] === S.due)[2](r.days);
+
+  // ── Roles ──
+  const hit = (sel, a, b) => !sel || sel === a || sel === key(a, b);
+  const boardOk = r => !S.board || r.source === S.board;
+  const pass = (r, skip) =>
+    (skip === 'type' || hit(S.type, r.cat, r.sub)) &&
+    (skip === 'place' || hit(S.place, r.region, r.country)) &&
+    (skip === 'due' || dueOk(r)) &&
+    (skip === 'board' || boardOk(r)) &&
+    (!S.q || r.hay.includes(S.q)) &&
+    (!S.fresh || r.new);
+  const subRank = s => { const i = D.subOrder.indexOf(s); return i < 0 ? D.subOrder.length : i; };
+  const dueRank = r => (r.days != null && r.days >= 0 ? r.days : r.days == null ? 1e6 : 1e6 + 1);   // soonest first
+  const who = r => r.employer || r.source;
+  const sortFns = {
+    default: (x, y) => (y.new - x.new) || dueRank(x) - dueRank(y) || who(x).localeCompare(who(y)) || x.title.localeCompare(y.title),
+    deadline: (x, y) => dueRank(x) - dueRank(y) || x.title.localeCompare(y.title),
+    az: (x, y) => x.title.localeCompare(y.title),
+    loc: (x, y) => (x.loc || 'zzz').localeCompare(y.loc || 'zzz') || x.title.localeCompare(y.title),
+    emp: (x, y) => who(x).localeCompare(who(y)) || x.title.localeCompare(y.title),
+  };
+  const byRole = (x, y) => sortFns[$('#r-sort').value](x, y);
+
+  // Facet tree: mother rows in a fixed order; the selected mother opens its sub rows.
+  // Counts respect every other active filter, so they always say what a click will show.
+  function tree(id, name, allLabel, order, A, B, subSort) {
+    const pool = D.roles.filter(r => pass(r, name));
+    const n = new Map(), subs = new Map();
+    for (const r of D.roles) {
+      if (!subs.has(A(r))) subs.set(A(r), new Set());
+      if (B(r)) subs.get(A(r)).add(B(r));
+    }
+    for (const r of pool) {
+      n.set(A(r), (n.get(A(r)) || 0) + 1);
+      if (B(r)) n.set(key(A(r), B(r)), (n.get(key(A(r), B(r))) || 0) + 1);
+    }
+    const sel = S[name];
+    const row = (k, label, lvl) => {
+      const c = k ? n.get(k) || 0 : pool.length;
+      return el('button', {
+        type: 'button', class: `row l${lvl}${c ? '' : ' zero'}`, 'aria-pressed': String(sel === k),
+        onclick: () => { S[name] = sel === k ? (k.includes(SEP) ? k.split(SEP)[0] : '') : k; renderRoles(); }
+      }, el('span', {}, label), el('span', { class: 'n' }, fmt(c)));
+    };
+    const mothers = [...order.filter(a => subs.has(a)), ...[...subs.keys()].filter(a => !order.includes(a)).sort()];
+    const out = [row('', allLabel, 1)];
+    for (const a of mothers) {
+      out.push(row(a, a, 1));
+      const bs = [...subs.get(a)];
+      if ((sel === a || sel.startsWith(a + SEP)) && bs.length > 1)
+        for (const b of bs.sort(subSort(a, n))) out.push(row(key(a, b), b, 2));
+    }
+    $(id).replaceChildren(...out);
+  }
+
+  function dueFacet() {
+    const pool = D.roles.filter(r => pass(r, 'due'));
+    const row = (k, label, c) => el('button', {
+      type: 'button', class: `row l1${c || !k ? '' : ' zero'}`, 'aria-pressed': String(S.due === k),
+      onclick: () => { S.due = S.due === k ? '' : k; renderRoles(); }
+    }, el('span', {}, label), el('span', { class: 'n' }, fmt(c)));
+    $('#f-due').replaceChildren(row('', 'Any deadline', pool.length),
+      ...DUE.map(([k, label, test]) => row(k, label, pool.filter(r => test(r.days)).length)));
+  }
+
+  function boardFacet() {
+    const pool = D.roles.filter(r => pass(r, 'board'));
+    const boards = ['EJM', 'JOE'];
+    const row = (k, label, c) => el('button', {
+      type: 'button', class: `row l1${c || !k ? '' : ' zero'}`, 'aria-pressed': String(S.board === k),
+      onclick: () => { S.board = S.board === k ? '' : k; renderRoles(); }
+    }, el('span', {}, label), el('span', { class: 'n' }, fmt(c)));
+    $('#f-board').replaceChildren(row('', 'All sources', pool.length),
+      ...boards.map(b => row(b, b, pool.filter(r => r.source === b).length)));
+  }
+
+  const fmtDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function dueText(r) {
+    if (r.days == null) return r.deadline ? ['Closes ' + r.deadline, 'due'] : null;
+    if (r.days < 0) return [`Closed ${fmtDate(r.due)}`, 'due past'];
+    const rel = r.days === 0 ? 'today' : r.days === 1 ? 'tomorrow' : `in ${r.days} days`;
+    return [`Closes ${fmtDate(r.due)} (${rel})`, 'due'];
+  }
+
+  // Card: bold title / location / employer (via source) + red deadline / other extracted details.
+  function roleRow(r) {
+    const title = r.url
+      ? el('a', { class: 't', href: r.url, target: '_blank', rel: 'noopener noreferrer' }, r.title)
+      : el('span', { class: 't' }, r.title);
+    const boardTag = (r.source === 'EJM' || r.source === 'JOE') ? el('span', { class: 'board-tag' }, r.source) : false;
+    const from = !r.employer ? `via ${r.source}` : r.employer === r.source ? r.source : `${r.employer} (via ${r.source})`;
+    const due = dueText(r);
+    return el('li', { class: r.new ? 'job is-new' : 'job' },
+      r.new && el('span', { class: 'sr' }, 'New role: '),
+      title, boardTag,
+      el('div', { class: r.loc ? 'ln' : 'ln none' }, r.loc || 'Location not listed'),
+      el('div', { class: 'ln who' }, el('span', {}, from), due && el('span', { class: due[1] }, due[0])),
+      r.details.length > 0 && el('div', { class: 'ln det' }, r.details.join(' · ')));
+  }
+
+  function renderRoles() {
+    tree('#f-type', 'type', 'All job types', D.catOrder, r => r.cat, r => r.sub,
+      () => (x, y) => subRank(x) - subRank(y) || x.localeCompare(y));
+    tree('#f-place', 'place', 'All locations', D.regionOrder, r => r.region, r => r.country,
+      (a, n) => (x, y) => (n.get(key(a, y)) || 0) - (n.get(key(a, x)) || 0) || x.localeCompare(y));
+    dueFacet();
+    boardFacet();
+    const rows = D.roles.filter(r => pass(r));
+    const filtered = S.type || S.place || S.due || S.board || S.q || S.fresh;
+    $('#r-count').textContent = filtered ? `${fmt(rows.length)} of ${fmt(D.roles.length)} roles` : `All ${fmt(rows.length)} roles`;
+    $('#r-clear').hidden = !filtered;
+    const groups = group(rows, r => r.cat, r => r.sub);
+    const cats = [...D.catOrder.filter(c => groups.has(c)), ...[...groups.keys()].filter(c => !D.catOrder.includes(c))];
+    const out = [];
+    for (const cat of cats) {
+      const g = groups.get(cat);
+      out.push(el('h2', { class: 'grp' }, el('span', {}, cat), el('span', { class: 'n' }, fmt([...g.values()].flat().length))));
+      const subs = [...g.keys()].sort((x, y) => (x === '') - (y === '') || subRank(x) - subRank(y) || x.localeCompare(y));
+      for (const s of subs) {
+        if (s) out.push(el('h3', { class: 'sub' }, s, el('span', { class: 'n' }, fmt(g.get(s).length))));
+        out.push(el('ol', { class: 'jobs' }, g.get(s).sort(byRole).map(roleRow)));
+      }
+    }
+    if (!out.length) out.push(el('div', { class: 'empty' }, el('p', {}, 'No roles match these filters.'),
+      el('button', { type: 'button', class: 'chip', onclick: clearRoles }, 'Clear filters')));
+    $('#r-list').replaceChildren(...out);
+  }
+
+  function clearRoles() {
+    Object.assign(S, { type: '', place: '', due: '', board: '', q: '', fresh: false });
+    $('#q').value = '';
+    $('#fresh').checked = false;
+    renderRoles();
+  }
+
+  // ── Sources (status comes from the Source Tracker, stored in sources.yaml) ──
+  const STATUS = { directly: ['Directly', 'ok'], alert: ['Via alert', 'warn'], blocked: ['Blocked', 'bad'], ignored: ['Ignored', ''] };
+  const tracking = s => s.status === 'directly' || s.status === 'alert';
+  const statusHit = s => !S.status || (S.status === 'on' ? tracking(s) : S.status === 'off' ? !tracking(s) : s.status === S.status);
+  const count = st => D.sources.filter(s => s.status === st).length;
+  const tracked = D.sources.filter(tracking).length;
+  const catTotals = new Map();
+  for (const s of D.sources) {
+    const t = catTotals.get(s.cat) || { on: 0, all: 0 };
+    t.all++; t.on += tracking(s) ? 1 : 0;
+    catTotals.set(s.cat, t);
+  }
+
+  function srcRow(s) {
+    const name = s.url
+      ? el('a', { class: 'name', href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.name)
+      : el('span', { class: 'name' }, s.name);
+    const [label, tone] = STATUS[s.status] || STATUS.blocked;
+    const found = s.n == null ? '' : s.n ? `${fmt(s.n)} ${s.n === 1 ? 'role' : 'roles'} found` : 'no roles found';
+    const how = [s.how, found].filter(Boolean).join(' · ');
+    return el('li', { class: 'src' }, name, el('span', { class: `pill ${tone}` }, label),
+      (how || s.note) && el('div', { class: 'meta' },
+        how && el('span', { class: 'via' }, how),
+        s.note && el('span', { class: 'note' }, s.note)));
+  }
+
+  // Which category rows are expanded on the Sources tab.
+  // When a status filter is applied, every category starts collapsed (drill-in mode);
+  // with no filter, all categories are expanded so the full directory reads top-to-bottom.
+  const sExpanded = new Set();
+  let sFilterKey = '';
+
+  function toggleCat(cat) {
+    if (sExpanded.has(cat)) sExpanded.delete(cat); else sExpanded.add(cat);
+    renderSources(true);
+  }
+
+  function renderSources(keepExpanded) {
+    const chip = (v, label, c, sub) => el('button', {
+      type: 'button', class: sub ? 'chip sub' : 'chip', 'aria-pressed': String(S.status === v),
+      onclick: () => { S.status = S.status === v ? '' : v; renderSources(); }
+    }, label, el('span', { class: 'n' }, fmt(c)));
+    $('#s-chips').replaceChildren(
+      chip('', 'All', D.sources.length),
+      el('div', { class: 'chip-grp' },
+        chip('on', 'Tracking', tracked),
+        el('div', { class: 'subs' },
+          chip('directly', 'Directly', count('directly'), 1),
+          chip('alert', 'Via alert', count('alert'), 1))),
+      el('div', { class: 'chip-grp' },
+        chip('off', 'Not tracking', D.sources.length - tracked),
+        el('div', { class: 'subs' },
+          chip('blocked', 'Blocked', count('blocked'), 1),
+          chip('ignored', 'Ignored', count('ignored'), 1))));
+    const rows = D.sources.filter(s => statusHit(s) && (!S.sq || s.hay.includes(S.sq)));
+    // When the status/search filter changes, reset drill-in: collapse categories when a filter is on,
+    // expand them all when nothing is filtered. Keep the user's manual toggles inside a stable filter.
+    const filterKey = S.status + '|' + S.sq;
+    if (!keepExpanded && filterKey !== sFilterKey) {
+      sExpanded.clear();
+      if (!S.status && !S.sq) for (const s of D.sources) sExpanded.add(s.cat);
+      sFilterKey = filterKey;
+    }
+    const out = [];
+    for (const [cat, g] of group(rows, s => s.cat, s => s.sub)) {
+      const t = catTotals.get(cat);
+      const total = [...g.values()].reduce((n, l) => n + l.length, 0);
+      const open = sExpanded.has(cat);
+      const suffix = S.status ? `${total} ${STATUS[S.status]?.[0].toLowerCase() || S.status}` : `${t.on} of ${t.all} tracked`;
+      out.push(el('button', { type: 'button', class: 'grp cat' + (open ? ' open' : ''),
+        'aria-expanded': String(open), onclick: () => toggleCat(cat) },
+        el('span', { class: 'caret', 'aria-hidden': 'true' }, '▸'),
+        el('span', { class: 'cat-name' }, cat),
+        el('span', { class: 'n' }, suffix)));
+      if (!open) continue;
+      for (const [sub, list] of g) {
+        if (sub) out.push(el('h3', { class: 'sub' }, sub));
+        out.push(el('ul', { class: 'srcs' }, list.map(srcRow)));
+      }
+    }
+    if (!out.length) out.push(el('div', { class: 'empty' }, el('p', {}, 'No sources match.')));
+    $('#s-list').replaceChildren(...out);
+  }
+
+  // ── Masthead, tabs, inputs ──
+  const nNew = D.roles.filter(r => r.new).length;
+  $('#stamp').textContent = 'Updated ' + D.stamp;
+  $('#lede').textContent = `${fmt(D.roles.length)} open roles in this edition, ${fmt(nNew)} new since the last run. `
+    + `${fmt(tracked)} of your ${fmt(D.sources.length)} sources are tracked, directly or through email alerts.`;
+  $('#k-roles').textContent = fmt(D.roles.length);
+  $('#k-new').textContent = fmt(nNew);
+  $('#k-src').textContent = `${fmt(tracked)} of ${fmt(D.sources.length)}`;
+  $('#t-roles .n').textContent = fmt(D.roles.length);
+  $('#t-sources .n').textContent = fmt(D.sources.length);
+
+  function show(tab) {
+    for (const t of ['roles', 'map', 'sources']) {
+      $('#v-' + t).hidden = t !== tab;
+      $('#t-' + t).setAttribute('aria-selected', String(t === tab));
+    }
+  }
+  $('#t-roles').addEventListener('click', () => show('roles'));
+  $('#t-map').addEventListener('click', () => show('map'));
+  $('#t-sources').addEventListener('click', () => show('sources'));
+  $('#q').addEventListener('input', e => { S.q = e.target.value.trim().toLowerCase(); renderRoles(); });
+  $('#fresh').addEventListener('change', e => { S.fresh = e.target.checked; renderRoles(); });
+  $('#sq').addEventListener('input', e => { S.sq = e.target.value.trim().toLowerCase(); renderSources(); });
+  $('#r-clear').addEventListener('click', clearRoles);
+  $('#r-sort').addEventListener('change', renderRoles);
+
+  // ── Map ──
+  // Some names in the world-atlas differ from what place() emits — this table normalises them.
+  const TOPO_ALIAS = {
+    'United States of America': 'United States', 'Bosnia and Herz.': 'Bosnia and Herzegovina',
+    'Central African Rep.': 'Central African Republic', 'Dem. Rep. Congo': 'DR Congo',
+    'Dominican Rep.': 'Dominican Republic', 'Eq. Guinea': 'Equatorial Guinea',
+    'S. Sudan': 'South Sudan', 'Solomon Is.': 'Solomon Islands',
+    'Falkland Is.': 'Falkland Islands', 'Fr. S. Antarctic Lands': 'French Southern Territories',
+    'W. Sahara': 'Western Sahara', 'N. Cyprus': 'Cyprus', 'Somaliland': 'Somalia',
+    "Côte d'Ivoire": "Cote d'Ivoire", 'eSwatini': 'Eswatini', 'Sao Tome and Principe': 'Sao Tome and Principe',
+  };
+  const countByCountry = new Map();
+  for (const r of D.roles) if (r.country) countByCountry.set(r.country, (countByCountry.get(r.country) || 0) + 1);
+  // 6 buckets: 0, 1, 2-4, 5-9, 10-19, 20+ — reads roughly evenly on econ-JM volumes.
+  const BUCKETS = [[0, 0], [1, 1], [2, 4], [5, 9], [10, 19], [20, Infinity]];
+  const bucketOf = n => BUCKETS.findIndex(([lo, hi]) => n >= lo && n <= hi);
+  const tt = $('#m-tt');
+  const svg = document.querySelector('.worldmap');
+  const paths = svg ? [...svg.querySelectorAll('path')] : [];
+  const nameToPaths = new Map();
+  for (const p of paths) {
+    const my = TOPO_ALIAS[p.dataset.name] || p.dataset.name;
+    const c = countByCountry.get(my) || 0;
+    p.setAttribute('data-country', my);
+    p.setAttribute('data-b', String(bucketOf(c)));
+    if (c > 0) p.setAttribute('data-hit', '');
+    if (!nameToPaths.has(my)) nameToPaths.set(my, []);
+    nameToPaths.get(my).push(p);
+  }
+
+  function moveTt(evt, name, c) {
+    const box = svg.getBoundingClientRect();
+    tt.style.left = (evt.clientX - box.left) + 'px';
+    tt.style.top = (evt.clientY - box.top) + 'px';
+    tt.innerHTML = '';
+    tt.append(el('strong', {}, name), ' — ', el('span', {}, c === 1 ? '1 role' : `${fmt(c)} roles`));
+    tt.hidden = false;
+  }
+  svg && svg.addEventListener('mousemove', e => {
+    const p = e.target.closest('path[data-country]');
+    if (!p) { tt.hidden = true; return; }
+    moveTt(e, p.dataset.country, +p.dataset.b >= 0 ? countByCountry.get(p.dataset.country) || 0 : 0);
+  });
+  svg && svg.addEventListener('mouseleave', () => { tt.hidden = true; });
+  svg && svg.addEventListener('click', e => {
+    const p = e.target.closest('path[data-hit]');
+    if (!p) return;
+    const country = p.dataset.country;
+    const region = D.roles.find(r => r.country === country)?.region;
+    if (!region) return;
+    const k = country ? `${region}${SEP}${country}` : region;
+    S.place = S.place === k ? '' : k;
+    for (const q of paths) q.classList.toggle('selected', q.dataset.country === country && S.place === k);
+    renderRoles();
+    show('roles');
+    setTimeout(() => $('#r-count')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  });
+
+  function renderMapMeta() {
+    const covered = countByCountry.size;
+    $('#m-count').textContent = `Roles by country: ${fmt(D.roles.filter(r => r.country).length)} of `
+      + `${fmt(D.roles.length)} roles placed in ${fmt(covered)} countries.`;
+    // legend
+    const labels = ['0', '1', '2–4', '5–9', '10–19', '20+'];
+    $('#m-legend').replaceChildren(...labels.map((lab, i) =>
+      el('span', { class: 'cell' }, el('span', { class: 'sw', style: `background: var(--m${i})` }), lab)));
+    // top-10 countries list under the map
+    const top = [...countByCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15);
+    $('#m-top').replaceChildren(el('h3', {}, 'Top countries this run'),
+      ...top.map(([c, n]) => el('div', { class: 'row' },
+        el('span', { style: 'color:var(--ink)' }, c), ' — ',
+        el('span', { class: 'via' }, n === 1 ? '1 role' : `${fmt(n)} roles`))));
+  }
+  renderMapMeta();
+
+  S.q = $('#q').value.trim().toLowerCase();
+  S.fresh = $('#fresh').checked;
+  S.sq = $('#sq').value.trim().toLowerCase();
+  renderRoles();
+  renderSources();
+  show({ '#map': 'map', '#sources': 'sources' }[location.hash] || 'roles');
+})();
+</script>
+

@@ -1,0 +1,393 @@
+# sources.yaml — Marcelo, econ JM 2026-27
+# Phase 2 script consumes this. Manual sources are for you to check by hand.
+#
+# type: rss | html | manual
+#   rss:    URL is an RSS/Atom feed → feedparser
+#   html:   plain HTML page          → requests + BS4 with `selector`
+#   manual: skipped by script         → login-walled, static, or national-language
+# selector: CSS selector for job-list items (html only; filled in during Phase 2 inspection)
+# credentials: key in credentials.local
+# note: free-text
+#
+# URL ACCURACY: boards/aggregators are verified-common; institutional careers URLs
+# (esp. central banks) are best-effort and MUST be verified before Phase 2 relies on
+# them — the checker logs 404s. ponytail: fix on 404, don't hand-click 130 links.
+#
+# For research jobs specifically, most of these institutions ALSO post on EJM/JOE —
+# the career pages catch the analyst/non-EJM long tail.
+
+sources:
+
+  # ═══════════════════════════════════════════════════════════
+  # ECON JOB BOARDS  (set up email/RSS alerts on these)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "EJM", url: "https://econjobmarket.org/positions", type: manual, note: "Saved search + email alerts. Central board.", status: ignored, how: "You check manually"}
+  - {name: "JOE (AEA)", url: "https://www.aeaweb.org/joe/listings", type: manual, note: "RSS if available, else email digest.", status: ignored, how: "You check manually"}
+  - {name: "Inomics", url: "https://inomics.com/jobs", type: manual, note: "Email alerts, Europe-heavy.", status: directly, how: "aggregator"}
+  - {name: "Economic Misfit board", url: "https://theeconomicmisfit.com/econjobboard/", type: html, status: blocked, how: "Embedded widget"}
+
+  # ═══════════════════════════════════════════════════════════
+  # ACADEMIC AGGREGATORS
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Euraxess (EU research jobs)", url: "https://euraxess.ec.europa.eu/jobs/search", type: html, note: "EU-wide, incl. many central banks & institutes.", status: directly, how: "aggregator"}
+  - {name: "Academic Positions", url: "https://academicpositions.com/find-jobs?category=economics", type: html, status: alert, how: "IMAP · Email alerts active"}
+  - {name: "jobs.ac.uk", url: "https://www.jobs.ac.uk/search/economics", type: html, note: "UK academia.", status: directly, how: "aggregator"}
+  - {name: "HigherEdJobs (economics)", url: "https://www.higheredjobs.com/faculty/search.cfm?JobCat=101", type: html, note: "US academia.", status: ignored, how: "US academia"}
+  - {name: "OpenPostdoc", url: "https://www.openpostdoc.org/board?field=Economics", type: html, note: "Postdoc listings. Also scrapes Political Science.", status: directly, how: "dedicated · Economics + PolSci fields"}
+  - {name: "OpenFacultyJobs", url: "https://www.openfacultyjobs.com/board?field=Political+Science", type: html, note: "Faculty listings. Also scrapes Economics field.", status: directly, how: "dedicated · Economics + PolSci fields"}
+
+  # ═══════════════════════════════════════════════════════════
+  # POLICY / IO / DEVELOPMENT AGGREGATORS
+  # ═══════════════════════════════════════════════════════════
+  - {name: "UNjobs", url: "https://unjobs.org/", type: html, note: "Filter 'economist'/'research'.", status: directly, how: "aggregator"}
+  - {name: "UN Hiring Index", url: "https://unvacancies.org/un-hiring-index", type: html, status: alert, how: "your alert"}
+  - {name: "Impactpool", url: "https://www.impactpool.org/jobs", type: html, note: "Major UN/IO board.", status: directly, how: "aggregator"}
+  - {name: "Devex", url: "https://www.devex.com/jobs/search", type: html, note: "International development.", status: alert, how: "IMAP (needs signup) · Pre-wired, needs your email alert signup"}
+  - {name: "ReliefWeb Jobs", url: "https://reliefweb.int/jobs", type: html, status: directly, how: "aggregator"}
+  - {name: "EuroBrussels", url: "https://www.eurobrussels.com/", type: html, note: "EU-affairs & Brussels institutions.", status: alert, how: "IMAP (needs signup) · Pre-wired, needs your email alert signup"}
+  - {name: "EU Careers (EPSO)", url: "https://eu-careers.europa.eu/en/job-opportunities", type: html, note: "EU institutions; some require EU citizenship.", status: alert, how: "your alert"}
+  - {name: "CAGI (Geneva NGO board)", url: "https://jobs.cagi.ch/", type: html, note: "Geneva-local.", status: directly, how: "dedicated · Geneva NGO board"}
+  - {name: "cinfo (Swiss int'l cooperation)", url: "https://www.cinfo.ch/en/jobs", type: html, status: blocked, how: "Login-walled"}
+  - {name: "APSIA", url: "https://apsia.org/job-and-internship-openings/", type: html, note: "IHEID is a member school.", status: blocked, how: "Cloudflare 403"}
+  - {name: "80,000 Hours", url: "https://jobs.80000hours.org/", type: html, status: alert, how: "your alert"}
+  - {name: "FindMyDesk", url: "https://findmydesk.org/", type: html, status: ignored, how: "Niche board"}
+  - {name: "GenderJobs", url: "https://genderjobs.org/", type: html, status: ignored, how: "Niche board"}
+  - {name: "Idealist", url: "https://www.idealist.org/en/jobs", type: html, status: alert, how: "IMAP (needs signup) · Pre-wired, needs your email alert signup"}
+
+  # ═══════════════════════════════════════════════════════════
+  # IHEID  (manual / auth)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "IHEID Online Job Portal", url: "https://www.graduateinstitute.ch/online-job-portal", type: manual, credentials: iheid_portal, note: "Login-walled. Check weekly.", status: blocked, how: "Login-walled"}
+  - {name: "IHEID Career Center Sheet", url: "https://docs.google.com/spreadsheets/d/1DX7vDLSKoAo27J6uiuRxrA7MlpqPXNW0/edit?gid=1257890858", type: manual, note: "Curated by career center.", status: ignored, how: "Static reference"}
+  - {name: "IHEID Resources PDF 2026", url: "https://www.graduateinstitute.ch/sites/internet/files/2026-05/Resources-for-students_2026-Final-1.pdf", type: manual, note: "Static reference doc.", status: ignored, how: "Static reference"}
+
+  # ═══════════════════════════════════════════════════════════
+  # MULTILATERAL DEVELOPMENT BANKS & IFIs
+  # ═══════════════════════════════════════════════════════════
+  - {name: "World Bank Group", url: "https://www.worldbank.org/en/about/careers", type: html, note: "Also YP Program & DEC research.", status: alert, how: "your alert"}
+  - {name: "IFC (World Bank Group)", url: "https://www.ifc.org/en/about/careers", type: html, status: alert, how: "your alert"}
+  - {name: "MIGA (World Bank Group)", url: "https://www.worldbank.org/ext/en/careers", type: html, status: alert, how: "your alert"}
+  - {name: "IMF", url: "https://www.imf.org/en/About/Recruitment", type: html, note: "EP Program + research.", status: directly, how: "Workday"}
+  - {name: "EBRD", url: "https://www.ebrd.com/careers-at-the-ebrd.html", type: html, note: "London. Strong econ research.", status: directly, how: "SAP SuccessFactors"}
+  - {name: "EIB (European Investment Bank)", url: "https://erecruitment.eib.org/psc/hr/EIBJOBS/CAREERS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Page=HRS_APP_SCHJOB_FL&focus=Applicant", type: html, note: "Luxembourg. e-recruitment portal.", status: alert, how: "your alert"}
+  - {name: "EIF (European Investment Fund)", url: "https://www.eif.org/work-with-us/careers", type: html, note: "Luxembourg.", status: blocked, how: "PeopleSoft portal"}
+  - {name: "ESM (European Stability Mechanism)", url: "https://www.esm.europa.eu/careers", type: html, note: "Luxembourg. Sovereign/macro research.", status: blocked, how: "JS app"}
+  - {name: "CEB (Council of Europe Dev Bank)", url: "https://coebank.org/en/job-section/", type: html, note: "Paris.", status: directly, how: "SAP SuccessFactors"}
+  - {name: "IDB / BID (Inter-American Dev Bank)", url: "https://www.iadb.org/en/careers", type: html, note: "Washington DC. Strong research dept.", status: alert, how: "IMAP (jobs2web) · Email alert active"}
+  - {name: "IDB Invest", url: "https://www.idbinvest.org/en/careers", type: html, status: alert, how: "your alert"}
+  - {name: "CAF (Dev Bank of Latin America)", url: "https://www.caf.com/en/about-caf/talent/", type: html, note: "Caracas/regional. ES advantage.", status: blocked, how: "JS app"}
+  - {name: "ADB (Asian Development Bank)", url: "https://www.adb.org/careers", type: html, note: "Manila. ADBI research inst in Tokyo.", status: directly, how: "dedicated (urllib) · Bypasses Cloudflare"}
+  - {name: "AIIB", url: "https://www.aiib.org/en/opportunities/career/job-vacancies/index.html", type: html, note: "Beijing. (= your 'AIB', confirmed.)", status: directly, how: "dedicated · JSON + HTML"}
+  - {name: "AfDB (African Development Bank)", url: "https://www.afdb.org/en/about-us/careers", type: html, note: "Abidjan. FR advantage.", status: blocked, how: "JS app"}
+  - {name: "IsDB (Islamic Development Bank)", url: "https://careers.isdb.org/", type: html, note: "Jeddah.", status: alert, how: "your alert"}
+  - {name: "NDB (New Development Bank / BRICS)", url: "https://www.ndb.int/careers/", type: html, note: "Shanghai.", status: alert, how: "your alert"}
+  - {name: "NIB (Nordic Investment Bank)", url: "https://www.nib.int/careers/", type: html, note: "Helsinki.", status: alert, how: "your alert"}
+  - {name: "OPEC Fund (OFID)", url: "https://opecfund.org/work-with-us/career-opportunities", type: html, note: "Vienna.", status: blocked, how: "JS app"}
+  - {name: "BSTDB (Black Sea Trade & Dev Bank)", url: "https://www.bstdb.org/career", type: html, note: "Thessaloniki.", status: directly, how: "dedicated · Drupal table"}
+
+  # ═══════════════════════════════════════════════════════════
+  # UN SYSTEM & INTERNATIONAL ORGS  (research-relevant)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "OECD", url: "https://oecd.org/en/careers.html", type: html, note: "Paris. Economics Dept + directorates.", status: directly, how: "SmartRecruiters"}
+  - {name: "CEPAL / ECLAC", url: "https://www.cepal.org/en/about/employment", type: html, note: "Santiago. ES advantage. Strong econ research.", status: directly, how: "dedicated · LinkedIn links"}
+  - {name: "WTO", url: "https://www.wto.org/english/thewto_e/vacan_e/vacan_e.htm", type: html, note: "Geneva. Economic Research Div.", status: directly, how: "Workday + page"}
+  - {name: "UNCTAD (via UN Careers)", url: "https://careers.un.org/", type: html, note: "Geneva. Filter duty station. Partially covered via UNjobs aggregator.", status: blocked, how: "UN Careers JS SPA · partial via UNjobs"}
+  - {name: "ILO", url: "https://jobs.ilo.org/", type: html, note: "Geneva. Research Dept + ILOSTAT. Partially covered via UNjobs.", status: blocked, how: "SuccessFactors JS · partial via UNjobs"}
+  - {name: "WIPO", url: "https://www.wipo.int/en/web/working-at-wipo/wipo-jobs", type: html, note: "Geneva. Chief Economist office — innovation/IP econ.", status: blocked, how: "Taleo"}
+  - {name: "WHO", url: "https://www.who.int/careers", type: html, note: "Geneva. Health economics. Partially covered via UNjobs.", status: blocked, how: "JS app · partial via UNjobs"}
+  - {name: "UNEP", url: "https://www.unep.org/about-un-environment/careers", type: html, note: "Nairobi/Geneva. Environmental econ. Partially covered via UNjobs.", status: blocked, how: "403 · partial via UNjobs"}
+  - {name: "IRENA", url: "https://www.irena.org/About/Employment/Vacancies-and-recruitment", type: html, note: "Abu Dhabi/Bonn. Renewable energy — your energy angle.", status: blocked, how: "403"}
+  - {name: "UNU-WIDER", url: "https://www.wider.unu.edu/opportunities", type: html, note: "Helsinki. Development economics research.", status: directly, how: "dedicated"}
+  - {name: "UNU-MERIT", url: "https://www.merit.unu.edu/about-us/vacancies/", type: html, note: "Maastricht. Innovation economics — your angle.", status: blocked, how: "JS app"}
+  - {name: "United Nations University", url: "https://careers.unu.edu/", type: html, note: "Global. Central UNU careers portal.", status: directly, how: "dedicated adapter"}
+  - {name: "FAO", url: "https://www.fao.org/employment/home/en/", type: html, note: "Rome. Ag/dev/environmental econ. Partially covered via UNjobs.", status: blocked, how: "JS app · partial via UNjobs"}
+  - {name: "IFAD", url: "https://www.ifad.org/en/careers", type: html, note: "Rome.", status: alert, how: "your alert"}
+  - {name: "WFP", url: "https://wfp.wd3.myworkdayjobs.com/job_openings", type: workday, note: "Rome.", status: directly, how: "Workday API"}
+  - {name: "UNIDO", url: "https://www.unido.org/careers", type: html, note: "Vienna. Industrial development.", status: alert, how: "your alert"}
+  - {name: "UNDP", url: "https://www.undp.org/careers", type: html, note: "Partially covered via UNjobs.", status: blocked, how: "403 · partial via UNjobs"}
+  - {name: "IIASA", url: "https://iiasa.ac.at/jobs", type: html, note: "Vienna. Systems/environmental research.", status: blocked, how: "403"}
+
+  # ═══════════════════════════════════════════════════════════
+  # CENTRAL BANKS — Switzerland & core Europe  (top location tiers)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "SNB (Switzerland)", url: "https://careers.snb.ch/search/?locale=en_US", type: html, note: "TOP location. German often required — check per posting. [verified]", status: blocked, how: "SuccessFactors JS"}
+  - {name: "ECB", url: "https://www.ecb.europa.eu/careers/what-we-offer/vacancies/html/index.en.html", type: html, note: "Frankfurt. Some tracks need EU citizenship.", status: blocked, how: "SSL error"}
+  - {name: "BIS", url: "https://www.bis.org/careers/index.htm", type: html, note: "Basel (CH!). Monetary & Economic Dept research.", status: directly, how: "dedicated · Card scrape"}
+  - {name: "Deutsche Bundesbank", url: "https://www.bundesbank.de/en/bundesbank/career", type: html, note: "German often required.", status: blocked, how: "German portal"}
+  - {name: "Banque de France", url: "https://www.recrutement.banque-france.fr/consulter-nos-offres/", type: html, note: "FR advantage. English research roles exist.", status: directly, how: "Workday"}
+  - {name: "Banca d'Italia", url: "https://www.bancaditalia.it/chi-siamo/lavora-con-noi/", type: html, note: "Strong research; annual econ competition.", status: blocked, how: "Italian concorso portal"}
+  - {name: "Banco de España", url: "https://www.bde.es/wbe/en/sobre-banco/trabajar-banco/", type: html, note: "Strong DG Economics research.", status: directly, how: "generic scraper"}
+  - {name: "De Nederlandsche Bank (DNB)", url: "https://www.dnb.nl/en/careers-at-dnb/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "National Bank of Belgium", url: "https://jobs.nbb.be/en", type: html, note: "Brussels. FR/NL context.", status: directly, how: "generic scraper"}
+  - {name: "Oesterreichische Nationalbank (OeNB)", url: "https://www.oenb.at/karriere/karriere-in-der-oenb.html", type: html, note: "Vienna.", status: blocked, how: "German portal"}
+  - {name: "Central Bank of Ireland", url: "https://www.centralbank.ie/careers", type: html, note: "Dublin. English, active research.", status: blocked, how: "JS SPA"}
+  - {name: "Banco de Portugal", url: "https://www.bportugal.pt/en/page/careers", type: html, note: "PT native = advantage. Strong research.", status: blocked, how: "JS SPA"}
+  - {name: "Bank of Finland", url: "https://www.suomenpankki.fi/en/bank-of-finland/bank-of-finland-as-an-employer/job-opportunities/", type: html, note: "Helsinki. + BOFIT (transition economies).", status: directly, how: "dedicated · rekrytointi.com"}
+  - {name: "Danmarks Nationalbank", url: "https://www.nationalbanken.dk/en/careers", type: html, status: directly, how: "Workday"}
+  - {name: "Sveriges Riksbank", url: "https://www.riksbank.se/en-gb/about-the-riksbank/come-work-with-us/available-vacancies/", type: html, note: "Very research-active, recruits internationally.", status: blocked, how: "JS SPA"}
+  - {name: "Norges Bank", url: "https://www.norges-bank.no/en/topics/about/Careers/", type: html, note: "Oslo. Research + NBIM.", status: blocked, how: "JS SPA"}
+  - {name: "Bank of England", url: "https://www.bankofengland.co.uk/careers", type: html, note: "Large research staff.", status: blocked, how: "Oracle ATS"}
+
+  # ═══════════════════════════════════════════════════════════
+  # CENTRAL BANKS — rest of Europe
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Bank of Lithuania", url: "https://www.lb.lt/en/careers", type: html, note: "Very research-active, recruits internationally in English.", status: blocked, how: "JS SPA"}
+  - {name: "Eesti Pank (Estonia)", url: "https://www.eestipank.ee/en/eesti-pank/careers", type: html, status: blocked, how: "Rare openings"}
+  - {name: "Latvijas Banka", url: "https://karjera.bank.lv/en", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Czech National Bank", url: "https://www.cnb.cz/DC3VyberovaRizeni/", type: html, note: "Active research. Selection procedures page (Czech).", status: blocked, how: "Czech portal"}
+  - {name: "Narodowy Bank Polski (NBP)", url: "https://nbp.pl/en/about-us/", type: html, status: blocked, how: "Polish portal"}
+  - {name: "Magyar Nemzeti Bank (Hungary)", url: "https://toborzas.mnb.hu/allasok", type: html, status: blocked, how: "Hungarian portal"}
+  - {name: "National Bank of Slovakia", url: "https://kariera.nbs.sk/", type: html, status: blocked, how: "Slovak portal"}
+  - {name: "Bank of Greece", url: "https://www.bankofgreece.gr/en/the-bank/job-opportunities", type: html, status: blocked, how: "Rare English openings"}
+  - {name: "Central Bank of Luxembourg (BCL)", url: "https://www.bcl.lu/en/jobs/", type: html, status: blocked, how: "Small portal"}
+  - {name: "Central Bank of Cyprus", url: "https://www.centralbank.cy/en/the-bank/vacancies", type: html, status: blocked, how: "Small portal"}
+  - {name: "Bank of Slovenia", url: "https://www.bsi.si/en/careers-at-banka-slovenije", type: html, status: blocked, how: "Rare openings"}
+  - {name: "Croatian National Bank (HNB)", url: "https://www.hnb.hr/en/about-us/career/employment", type: html, status: blocked, how: "Rare openings"}
+  - {name: "National Bank of Romania (BNR)", url: "https://www.bnr.ro/Careers-3517.aspx", type: html, status: blocked, how: "Rare openings"}
+  - {name: "Central Bank of Iceland", url: "https://cb.is/about-the-bank/careers/vacancies/", type: html, note: "Reykjavík.", status: blocked, how: "Tiny portal"}
+
+  # ═══════════════════════════════════════════════════════════
+  # CENTRAL BANKS — North America, Asia-Pacific, Middle East, Africa
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Federal Reserve Board", url: "https://www.federalreserve.gov/careers-economists.htm", type: html, note: "Washington DC. Heavy PhD hiring.", status: blocked, how: "Taleo"}
+  - {name: "FRB New York", url: "https://www.newyorkfed.org/careers", type: html, note: "All 12 regional Feds hire PhD economists.", status: blocked, how: "JS SPA"}
+  - {name: "FRB Chicago", url: "https://rb.wd5.myworkdayjobs.com/FRS?hiringCompany=7186c32a743f01e4caeeb8caaf01430c", type: html, status: blocked, how: "Workday (company-filtered)"}
+  - {name: "FRB San Francisco", url: "https://www.frbsf.org/our-district/careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "FRB Minneapolis", url: "https://www.minneapolisfed.org/about-us/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "FRB Boston / Richmond / Atlanta / St. Louis / Dallas / Cleveland / KC / Philadelphia", url: "https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm", type: manual, note: "Reach each regional Fed's careers page from here.", status: ignored, how: "Manual reference page"}
+  - {name: "Bank of Canada", url: "https://www.bankofcanada.ca/careers/", type: html, note: "Bilingual EN/FR. Active research.", status: blocked, how: "JS SPA"}
+  - {name: "Reserve Bank of Australia (RBA)", url: "https://www.rba.gov.au/careers/", type: html, status: blocked, how: "403"}
+  - {name: "Reserve Bank of New Zealand", url: "https://www.rbnz.govt.nz/careers", type: html, status: blocked, how: "403"}
+  - {name: "Bank of Japan", url: "https://www.imes.boj.or.jp/en_index.html", type: html, note: "IMES research institute.", status: blocked, how: "Static page"}
+  - {name: "Bank of Korea (BOK)", url: "https://www.bok.or.kr/eng/main/main.do", type: html, note: "BOK Economic Research Institute.", status: blocked, how: "Korean portal"}
+  - {name: "Monetary Authority of Singapore (MAS)", url: "https://www.mas.gov.sg/careers", type: html, note: "English. Economic Policy Group.", status: blocked, how: "JS SPA"}
+  - {name: "Hong Kong Monetary Authority", url: "https://www.hkma.gov.hk/eng/about-us/join-us/current-vacancies/", type: html, note: "+ HKIMR research.", status: directly, how: "dedicated"}
+  - {name: "Reserve Bank of India", url: "https://opportunities.rbi.org.in/", type: html, note: "DEPR research.", status: blocked, how: "JS portal"}
+  - {name: "Bank Negara Malaysia", url: "https://www.bnm.gov.my/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Bank of Thailand", url: "https://fa-exfj-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/th/sites/CX_1/jobs", type: html, note: "Bangkok. + PIER research institute. Oracle recruiting portal.", status: blocked, how: "Oracle Cloud"}
+  - {name: "Central Bank of Israel", url: "https://www.boi.org.il/en/", type: html, note: "Research dept recruits PhDs internationally.", status: blocked, how: "Hebrew portal"}
+  - {name: "South African Reserve Bank (SARB)", url: "https://www.resbank.co.za/en/home/about-us/Careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Saudi Central Bank (SAMA)", url: "https://www.sama.gov.sa/en-US/Careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Central Bank of the UAE", url: "https://www.centralbank.ae/en/careers/", type: html, status: blocked, how: "JS SPA"}
+
+  # ═══════════════════════════════════════════════════════════
+  # CENTRAL BANKS — Latin America  (PT/ES advantage; research-active)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Banco Central do Brasil", url: "https://www.bcb.gov.br/en/aboutus/careers", type: manual, note: "PT native. Concurso público — rare, scheduled openings.", status: ignored, how: "Concurso público (rare)"}
+  - {name: "Banco de México", url: "https://reclutamiento.banxico.org.mx/psc/hrprd/EMPLOYEE/HRMS/c/HRS_HRAM.BM_RYS_PORT_EMP.GBL", type: html, note: "Strong research, hires PhDs. ES.", status: blocked, how: "PeopleSoft portal"}
+  - {name: "Banco Central de Chile", url: "https://www.bcentral.cl/en/web/banco-central/careers", type: html, note: "Strong research, recruits internationally. ES.", status: blocked, how: "JS SPA"}
+  - {name: "Banco Central de Reserva del Perú (BCRP)", url: "https://www.bcrp.gob.pe/sobre-el-bcrp/empleo.html", type: html, note: "Research-active. ES.", status: blocked, how: "Spanish portal"}
+  - {name: "Banco de la República (Colombia)", url: "https://www.banrep.gov.co/es/trabaje-con-nosotros", type: html, note: "Research unit. ES.", status: blocked, how: "Spanish portal"}
+  - {name: "BCRA (Argentina)", url: "https://www.bcra.gob.ar/", type: html, note: "ES.", status: blocked, how: "Minimal portal"}
+  - {name: "CEMLA (LatAm monetary studies)", url: "https://www.cemla.org/", type: html, note: "Mexico City. Regional CB research hub.", status: ignored, how: "Regional hub, not a job board"}
+
+  # ═══════════════════════════════════════════════════════════
+  # THINK TANKS / RESEARCH INSTITUTES
+  # ═══════════════════════════════════════════════════════════
+  - {name: "CEPR (London)", url: "https://cepr.org/about/jobs-at-cepr", type: html, status: blocked, how: "403"}
+  - {name: "Bruegel (Brussels)", url: "https://www.bruegel.org/careers", type: html, note: "EU political economy + energy.", status: directly, how: "generic scraper"}
+  - {name: "PIIE (Washington DC)", url: "https://www.piie.com/careers", type: html, status: directly, how: "generic scraper"}
+  - {name: "CGD (DC / London)", url: "https://www.cgdev.org/careers", type: html, note: "Political economy of reform, dev.", status: directly, how: "dedicated adapter (applytojob)"}
+  - {name: "Kiel Institute", url: "https://www.kielinstitut.de/institute/career/job-vacancies/", type: html, note: "Trade & energy; English roles.", status: directly, how: "generic scraper"}
+  - {name: "DIW Berlin", url: "https://www.diw.de/en/diw_01.c.10197.en/careers.html", type: html, status: directly, how: "generic scraper"}
+  - {name: "ZEW Mannheim", url: "https://www.zew.de/en/career", type: html, note: "German often required.", status: directly, how: "generic scraper"}
+  - {name: "ifo Institute (Munich)", url: "https://www.ifo.de/en/career-ifo", type: html, status: directly, how: "dedicated adapter (Drupal)"}
+  - {name: "IZA (Bonn)", url: "https://jobs.iza.org/", type: html, note: "Labour economics.", status: blocked, how: "JS SPA (minimal HTML)"}
+  - {name: "IFS (Institute for Fiscal Studies, London)", url: "https://ifs.org.uk/about/vacancies", type: html, note: "Public economics.", status: blocked, how: "403"}
+  - {name: "ODI (London)", url: "https://careers.odi.org/", type: html, note: "Development.", status: blocked, how: "JS-rendered job block"}
+  - {name: "IFPRI (Washington DC)", url: "https://www.ifpri.org/careers/", type: html, note: "Food/ag policy, dev econ.", status: alert, how: "your alert"}
+  - {name: "RFF (Resources for the Future, DC)", url: "https://www.rff.org/about/careers/", type: html, note: "Environmental economics.", status: directly, how: "generic scraper"}
+  - {name: "WRI (World Resources Institute)", url: "https://www.wri.org/careers", type: html, note: "Environmental.", status: directly, how: "generic scraper"}
+  - {name: "MCC Berlin (Mercator climate)", url: "https://www.pik-potsdam.de/en/people/career", type: html, note: "Climate economics — your angle.", status: directly, how: "generic scraper · PIK careers page (MCC posts there)"}
+  - {name: "Grantham Research Institute (LSE)", url: "https://www.lse.ac.uk/granthaminstitute/about/vacancies/", type: html, note: "Climate/environmental econ.", status: directly, how: "generic scraper"}
+  - {name: "PIK (Potsdam Institute)", url: "https://www.pik-potsdam.de/en/people/career", type: html, note: "Climate impact research.", status: directly, how: "generic scraper · PIK careers page"}
+
+  # Annotation tags from your IHEID career-center sheet:
+  #   [★] you/career-center flagged as interesting / good fit
+  #   [~] mostly reports/consulting, limited real research
+  #   [✗] seems not to hire economists / not genuine research
+
+  # ═══════════════════════════════════════════════════════════
+  # IO / POLICY — additional Geneva & climate bodies (from sheet)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "UNECE", url: "https://unece.org/about-unece/job-opportunities", type: html, note: "Geneva. Economic Cooperation & Trade Div. Partially covered via UNjobs.", status: blocked, how: "403 · partial via UNjobs"}
+  - {name: "ITU", url: "https://www.itu.int/en/careers", type: html, note: "Geneva. Data & Analytics Div.", status: alert, how: "your alert"}
+  - {name: "ITC (International Trade Centre)", url: "https://intracen.org/about-us/careers/job-opportunities", type: html, note: "Geneva. UN/WTO joint. Market Analysis & Research.", status: blocked, how: "403"}
+  - {name: "WEF (World Economic Forum)", url: "https://www.weforum.org/about/careers/", type: html, note: "Geneva. Centre for the New Economy & Society.", status: alert, how: "your alert"}
+  - {name: "IPCC", url: "https://www.ipcc.ch/about/vacancies/", type: html, note: "Geneva. Climate.", status: blocked, how: "few vacancies, checked manually"}
+  - {name: "IISD", url: "https://www.iisd.org/mission-and-goals/employment-and-consulting", type: html, note: "Geneva. [★] Environment–trade.", status: blocked, how: "JS SPA"}
+  - {name: "CMCC (climate)", url: "https://www.cmcc.it/about/careers", type: html, note: "Italy. Climate economics.", status: directly, how: "dedicated adapter"}
+
+  # ═══════════════════════════════════════════════════════════
+  # PRIVATE SECTOR — Swiss finance (Geneva & Zurich)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Pictet (Research Institute)", url: "https://www.pictet.com/ch/en/careers", type: html, note: "Geneva. [~] Boss-led, light research per your note — network.", status: alert, how: "your alert"}
+  - {name: "UBS (CIO / Global Research)", url: "https://www.ubs.com/global/en/careers.html", type: html, note: "Geneva/Zurich. Chief Investment Office; Global Research.", status: blocked, how: "403"}
+  - {name: "Lombard Odier", url: "https://www.lombardodier.com/home/careers.html", type: html, note: "Geneva. CIO / Macro Research.", status: directly, how: "Workday"}
+  - {name: "Union Bancaire Privée (UBP)", url: "https://iaadtu.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/jobs?mode=location", type: html, note: "Geneva. Group Economics & Research.", status: blocked, how: "Oracle Cloud portal"}
+  - {name: "Mirabaud", url: "https://www.mirabaud.com/en/careers/", type: html, note: "Geneva. Economic Research; Strategy.", status: directly, how: "generic scraper"}
+  - {name: "Julius Baer", url: "https://www.juliusbaer.com/en/careers/", type: html, note: "Zurich. Research/CIO.", status: alert, how: "your alert"}
+  - {name: "Vontobel", url: "https://www.vontobel.com/en-ch/about-vontobel/careers/open-positions/?search=Economist", type: html, note: "Zurich. Research.", status: blocked, how: "JS SPA (search is JS-rendered)"}
+  - {name: "Bank J. Safra Sarasin", url: "https://jsafrasarasin.umantis.com/Jobs/All", type: html, note: "Basel/Zurich. Sustainable-investing research.", status: directly, how: "dedicated adapter"}
+  - {name: "GAM Investments", url: "https://www.gam.com/en/careers", type: html, note: "Zurich. Asset management.", status: alert, how: "your alert"}
+  - {name: "Unigestion", url: "https://ch.linkedin.com/company/unigestion", type: manual, note: "Geneva. Quant/macro asset mgmt. Openings via LinkedIn only.", status: ignored, how: "LinkedIn-only"}
+  - {name: "Swiss Re (Swiss Re Institute)", url: "https://www.swissre.com/careers/jobSearch.html?searchterm=economist", type: html, note: "Zurich. Strong economic research team.", status: blocked, how: "SuccessFactors JS"}
+  - {name: "Zurich Insurance", url: "https://www.zurich.com/careers", type: html, note: "Zurich. Economics/risk.", status: alert, how: "your alert"}
+
+  # ═══════════════════════════════════════════════════════════
+  # PRIVATE SECTOR — Global investment banks & asset managers
+  # (small economics/research teams; also filter LinkedIn "economist")
+  # ═══════════════════════════════════════════════════════════
+  - {name: "J.P. Morgan (Global Economic Research)", url: "https://careers.jpmorgan.com/global/en/students/programs", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Goldman Sachs (Global Investment Research)", url: "https://www.goldmansachs.com/careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Morgan Stanley Research", url: "https://www.morganstanley.com/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Bank of America (Global Research)", url: "https://careers.bankofamerica.com/en-us", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Citi Research", url: "https://jobs.citi.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Barclays Research", url: "https://search.jobs.barclays/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Deutsche Bank Research", url: "https://careers.db.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "BNP Paribas", url: "https://group.bnpparibas/en/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "HSBC (Global Research)", url: "https://www.hsbc.com/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Nomura", url: "https://www.nomura.com/careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Standard Chartered", url: "https://jobs.standardchartered.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "BlackRock (Investment Institute)", url: "https://careers.blackrock.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "PIMCO", url: "https://www.pimco.com/en-us/our-firm/careers", type: html, status: blocked, how: "403"}
+  - {name: "Amundi", url: "https://about.amundi.com/our-job-board", type: html, note: "Paris. Largest EU asset manager.", status: blocked, how: "JS SPA"}
+  - {name: "Schroders", url: "https://www.schroders.com/en/global/individual/careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "AQR Capital", url: "https://careers.aqr.com/", type: html, note: "Quant, hires PhDs.", status: blocked, how: "JS SPA"}
+  - {name: "Bridgewater Associates", url: "https://www.bridgewater.com/working-at-bridgewater", type: html, note: "Macro.", status: blocked, how: "JS SPA"}
+  - {name: "Man Group", url: "https://www.man.com/careers", type: html, note: "Quant/macro.", status: blocked, how: "JS SPA"}
+
+  # ═══════════════════════════════════════════════════════════
+  # PRIVATE SECTOR — Commodities & energy  (your energy angle)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Trafigura", url: "https://www.trafigura.com/careers/", type: html, note: "Geneva. Commodities economist / market analysis.", status: directly, how: "generic scraper"}
+  - {name: "Vitol", url: "https://www.vitol.com/careers/", type: html, note: "Geneva. Energy economist.", status: blocked, how: "403"}
+  - {name: "Mercuria", url: "https://www.mercuria.com/jobs", type: html, note: "Geneva. Market analysis.", status: blocked, how: "JS SPA"}
+  - {name: "Gunvor", url: "https://gunvorgroup.com/careers/", type: html, note: "Geneva. Market research.", status: blocked, how: "403"}
+  - {name: "Shell (Scenarios/Economics)", url: "https://www.shell.com/careers.html", type: html, status: blocked, how: "JS SPA"}
+  - {name: "BP (Economics team)", url: "https://www.bp.com/en/global/corporate/careers.html", type: html, status: blocked, how: "JS SPA"}
+  - {name: "TotalEnergies", url: "https://careers.totalenergies.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Wood Mackenzie", url: "https://www.woodmac.com/careers/", type: html, note: "Energy research/consulting.", status: directly, how: "generic scraper"}
+  - {name: "Aurora Energy Research", url: "https://auroraer.com/careers/", type: html, note: "Oxford. Energy-market modelling.", status: directly, how: "generic scraper"}
+  - {name: "Rystad Energy", url: "https://www.rystadenergy.com/careers", type: html, note: "Energy analytics.", status: directly, how: "generic scraper"}
+
+  # ═══════════════════════════════════════════════════════════
+  # PRIVATE SECTOR — Insurance/reinsurance & rating agencies
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Allianz Research", url: "https://careers.allianz.com/", type: html, note: "Munich. Macro/insurance economics.", status: blocked, how: "JS SPA"}
+  - {name: "AXA", url: "https://www.axa.com/en/careers", type: html, note: "Paris. AXA Research.", status: blocked, how: "JS SPA"}
+  - {name: "Munich Re", url: "https://www.munichre.com/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Moody's Analytics", url: "https://careers.moodys.com/en/search-jobs/economist/49841/1", type: html, note: "Economic research & modelling.", status: directly, how: "dedicated adapter"}
+  - {name: "S&P Global", url: "https://careers.spglobal.com/jobs?keywords=economist", type: html, status: blocked, how: "Next.js SPA"}
+  - {name: "Fitch (Fitch Group)", url: "https://www.fitch.group/careers", type: html, status: alert, how: "email alert"}
+
+  # ═══════════════════════════════════════════════════════════
+  # PRIVATE SECTOR — Economic consulting  (competition / regulation / policy — heavy PhD hirers)
+  # ═══════════════════════════════════════════════════════════
+  # -- Global --
+  - {name: "Compass Lexecon", url: "https://www.compasslexecon.com/careers/", type: html, status: directly, how: "Workday"}
+  - {name: "Charles River Associates (CRA)", url: "https://www.crai.com/cra-careers/jobs/?level=Students%2FRecent%20Graduates", type: html, note: "Greenhouse ATS. Filter PhD.", status: directly, how: "Greenhouse API · PhD filter"}
+  - {name: "Analysis Group", url: "https://associatecareers-analysisgroup.icims.com/jobs/search", type: html, note: "iCIMS portal (405 blocked). Filter PhD.", status: blocked, how: "iCIMS 405"}
+  - {name: "Cornerstone Research", url: "https://www.cornerstone.com/careers/", type: html, status: directly, how: "Workday · iCIMS portals also 405"}
+  - {name: "The Brattle Group", url: "https://www.brattle.com/careers/current-openings/", type: html, status: directly, how: "Greenhouse API adapter"}
+  - {name: "Frontier Economics", url: "https://www.frontier-economics.com/uk/en/careers/", type: html, note: "Zurich office. [★] Competition, energy.", status: directly, how: "generic scraper"}
+  - {name: "Oxera", url: "https://careers.oxera.com/jobs", type: html, note: "Zurich office. Competition, finance.", status: blocked, how: "SmartRecruiters JS SPA"}
+  - {name: "NERA Economic Consulting", url: "https://www.nera.com/careers.html", type: html, note: "Geneva office (small). Antitrust, energy, arbitration.", status: directly, how: "generic scraper"}
+  - {name: "Copenhagen Economics", url: "https://copenhageneconomics.com/careers/working-with-us", type: html, status: directly, how: "generic scraper"}
+  - {name: "RBB Economics", url: "https://www.rbbecon.com/careers/", type: html, status: directly, how: "generic scraper"}
+  - {name: "E.CA Economics", url: "https://e-ca.com/careers", type: html, note: "Berlin.", status: directly, how: "generic scraper"}
+  - {name: "London Economics", url: "https://londoneconomics.co.uk/recruitment/", type: html, status: directly, how: "generic scraper"}
+  - {name: "Cambridge Econometrics", url: "https://www.camecon.com/careers/", type: html, note: "Energy/climate modelling.", status: directly, how: "generic scraper"}
+  # -- Swiss boutiques (from sheet, with your notes) --
+  - {name: "Swiss Economics", url: "https://www.swiss-economics.ch/", type: html, note: "Zurich/Lausanne. [★] Several PhDs — very interesting.", status: directly, how: "generic scraper"}
+  - {name: "Ecosys", url: "https://www.ecosys.com/en/", type: html, note: "Lausanne. [★] Team of PhDs, project-based econ.", status: blocked, how: "No careers page"}
+  - {name: "Ecoplan", url: "https://www.ecoplan.ch/", type: html, note: "Bern. [★] Interesting. Econ analysis & evaluation.", status: blocked, how: "No careers page"}
+  - {name: "INFRAS", url: "https://www.infras.ch/en/", type: html, note: "Bern/Zurich. [★] Very interesting. Environment & energy.", status: blocked, how: "No careers page"}
+  - {name: "B,S,S. Volkswirtschaftliche Beratung", url: "https://bss-basel.ch/", type: html, note: "Basel. [★] Very interesting. Policy & evaluation.", status: blocked, how: "No careers page"}
+  - {name: "Interface Politikstudien", url: "https://www.interface-pol.ch/en/category/jobs", type: html, note: "Lucerne. [★] Very interesting. Evaluation & research.", status: blocked, how: "WordPress/React JS"}
+  - {name: "Polynomics", url: "https://www.polynomics.ch/en/", type: html, note: "Basel/Olten. Econ consulting.", status: blocked, how: "No careers page"}
+  - {name: "Prognos", url: "https://www.prognos.com/de/stellenangebote-und-bewerbung", type: html, note: "Basel. [~] Consulting-only per your note.", status: blocked, how: "German portal"}
+  - {name: "BAK Economics", url: "https://www.bak-economics.com/en/", type: html, note: "Basel. [~] Simple reports per your note.", status: blocked, how: "No careers page"}
+  - {name: "Veritas Global", url: "https://veritasglobal.ch/", type: html, note: "Geneva. Climate-economics advisory (small). [check manually: no dedicated careers page]", status: blocked, how: "No careers page"}
+  - {name: "Deloitte Switzerland (Economics Advisory)", url: "https://www.deloitte.com/ch/en/services/consulting-financial/services/economics-advisory.html", type: html, note: "Geneva.", status: blocked, how: "JS SPA"}
+
+  # ═══════════════════════════════════════════════════════════
+  # PRIVATE SECTOR — Management consulting & tech economists
+  # ═══════════════════════════════════════════════════════════
+  - {name: "McKinsey Global Institute", url: "https://www.mckinsey.com/mgi/overview", type: html, note: "Research arm; also MGI economists.", status: blocked, how: "JS SPA"}
+  - {name: "BCG (Henderson Institute)", url: "https://careers.bcg.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Oliver Wyman", url: "https://www.oliverwyman.com/careers.html", type: html, status: blocked, how: "JS SPA"}
+  - {name: "PwC (Economics)", url: "https://www.pwc.com/gx/en/careers.html", type: html, status: blocked, how: "JS SPA"}
+  - {name: "EY (Economics)", url: "https://www.ey.com/en_gl/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Amazon (Economists)", url: "https://www.amazon.jobs/en-gb/job-category/economics", type: html, note: "Largest private PhD-econ hirer.", status: blocked, how: "JS SPA"}
+  - {name: "Google (Economists)", url: "https://www.google.com/about/careers/applications/jobs/results/?q=economist", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Microsoft (Office of the Chief Economist)", url: "https://careers.microsoft.com/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Meta (Economics)", url: "https://www.metacareers.com/jobs", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Uber (Economics)", url: "https://www.uber.com/us/en/careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Booking.com (Economists)", url: "https://careers.booking.com/", type: html, note: "Amsterdam.", status: blocked, how: "JS SPA"}
+  - {name: "Visa (Economics)", url: "https://corporate.visa.com/en/jobs/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Mastercard (Economics Institute)", url: "https://careers.mastercard.com/", type: html, status: alert, how: "your alert"}
+
+  # ═══════════════════════════════════════════════════════════
+  # RESEARCH CENTERS & UNIVERSITIES — Switzerland
+  # ═══════════════════════════════════════════════════════════
+  - {name: "IHEID open positions", url: "https://www.graduateinstitute.ch/open-positions", type: html, note: "Geneva. Your institute — Dept of Int'l Economics.", status: directly, how: "generic scraper"}
+  - {name: "University of Geneva (GSEM)", url: "https://jobs.unige.ch", type: html, note: "Geneva.", status: blocked, how: "JS portal"}
+  - {name: "ETH Zurich (D-MTEC / jobs)", url: "https://jobs.ethz.ch/", type: html, note: "Zurich. Mgmt, Tech & Economics.", status: directly, how: "generic scraper"}
+  - {name: "CER-ETH (Center for Economic Research)", url: "https://cer.ethz.ch/", type: html, note: "ETH Zurich. Env/resource & growth econ.", status: blocked, how: "No job listings page"}
+  - {name: "KOF Swiss Economic Institute", url: "https://kof.ethz.ch/en/the-institute/open-positions.html", type: html, note: "ETH Zurich. (Your postdoc target — Sturm chair.)", status: directly, how: "generic scraper"}
+  - {name: "University of Zurich (Dept of Economics)", url: "https://www.econ.uzh.ch/en/about/jobs.html", type: html, note: "+ UBS Center for Economics in Society.", status: directly, how: "generic scraper"}
+  - {name: "EPFL (College of Management)", url: "https://www.epfl.ch/about/working/faculty-positions-in-finance/", type: html, note: "Lausanne. Faculty positions in finance + general job-openings page.", status: directly, how: "generic scraper · Faculty positions page"}
+  - {name: "University of Lausanne (HEC / CREA)", url: "https://www.unil.ch/unil/fr/home/menuinst/travailler/recrutement-a-l-unil.html", type: html, note: "CREA note: small/masters team.", status: alert, how: "your alert · You set an alert"}
+  - {name: "University of St. Gallen (SIAW / SEW)", url: "https://siaw.unisg.ch/en/the-institute/job-openings/", type: html, note: "Applied economic research.", status: directly, how: "dedicated · jobs.unisg.ch links"}
+  - {name: "University of Bern (Dept of Economics)", url: "https://www.vwi.unibe.ch/", type: html, status: alert, how: "your alert · Set an alert"}
+  - {name: "University of Basel (WWZ)", url: "https://wwz.unibas.ch/en/", type: html, status: blocked, how: "German portal"}
+  - {name: "University of Fribourg (Center for Competitiveness)", url: "https://www.unifr.ch/competitiveness/en/", type: html, status: blocked, how: "No job listings"}
+  - {name: "University of Neuchâtel (IRENE)", url: "https://www.unine.ch/seco/en/emploi/", type: html, note: "Applied econ & policy.", status: blocked, how: "Dept page, no listings"}
+  - {name: "HSLU (Institute for Business & Regional Economics)", url: "https://hslu-jobs.ch/?lang=en", type: html, note: "Lucerne. Next.js SPA.", status: alert, how: "your alert · Set an alert on hslu-jobs.ch"}
+  - {name: "Swiss Finance Institute", url: "https://www.sfi.ch/en", type: html, note: "Finance research network across CH. [check manually: roles via 7 partner universities & LinkedIn]", status: ignored, how: "Roles via partner unis + LinkedIn"}
+  - {name: "Study Center Gerzensee", url: "https://www.szgerzensee.ch/", type: html, note: "SNB foundation; research + doctoral courses.", status: blocked, how: "No careers page"}
+  - {name: "Wyss Academy for Nature", url: "https://www.wyssacademy.org/en/about-us/careers", type: html, note: "Bern. [★] Environment.", status: blocked, how: "No job listings on page"}
+  - {name: "Avenir Suisse", url: "https://www.avenir-suisse.ch/offene-stellen/", type: html, note: "Zurich/Lausanne. [~] Policy think tank. Also FR: /fr/postes-vacants/", status: blocked, how: "WordPress JS-rendered"}
+  - {name: "economiesuisse", url: "https://www.economiesuisse.ch/en/career", type: html, note: "Geneva/Zurich. [★] Business federation, econ policy.", status: blocked, how: "JS SPA"}
+
+  # ═══════════════════════════════════════════════════════════
+  # RESEARCH CENTERS — Europe / international (env & dev, matching you)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "Institut des Politiques Publiques (IPP)", url: "https://www.ipp.eu/en/", type: html, note: "Paris (PSE). [★] Public/applied micro.", status: blocked, how: "French portal"}
+  - {name: "Paris School of Economics (PSE)", url: "https://www.parisschoolofeconomics.eu/en/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Toulouse School of Economics (TSE)", url: "https://www.tse-fr.eu/join-toulouse-school-economics", type: html, status: directly, how: "generic scraper"}
+  - {name: "EUI (Florence)", url: "https://www.eui.eu/About/JobOpportunities", type: html, status: directly, how: "generic scraper"}
+  - {name: "Barcelona School of Economics (BSE)", url: "https://bse.eu/research/job-openings", type: html, status: blocked, how: "JS SPA"}
+  - {name: "CEMFI (Madrid)", url: "https://www.cemfi.es/forms-cemfi/jobmarket/jobmarket_offers.asp", type: html, status: blocked, how: "JS-rendered job listings"}
+  - {name: "CREI (Barcelona)", url: "https://crei.cat/work-with-us/", type: html, status: directly, how: "dedicated · euraxess links"}
+  - {name: "Aarhus University (BSS)", url: "https://bss.au.dk/en/about-aarhus-bss/vacant-positions", type: html, note: "Denmark. Business & Social Sciences.", status: blocked, how: "JS-rendered content"}
+  - {name: "IIES (Stockholm)", url: "https://www.iies.su.se/", type: html, note: "Political economy / macro-dev.", status: blocked, how: "No careers page"}
+  - {name: "Nova SBE (Lisbon)", url: "https://www2.novasbe.unl.pt/en/", type: html, note: "PT advantage.", status: blocked, how: "JS SPA"}
+  - {name: "Católica Lisbon (CLSBE)", url: "https://clsbe.lisboa.ucp.pt/", type: html, note: "PT advantage.", status: blocked, how: "JS SPA"}
+  - {name: "WZB Berlin Social Science Center", url: "https://www.wzb.eu/en/the-wzb/working-at-the-wzb/job-opportunities", type: html, note: "Political economy.", status: directly, how: "dedicated · curl -k (SSL workaround)"}
+  - {name: "MPI for Research on Collective Goods (Bonn)", url: "https://www.coll.mpg.de/", type: html, note: "Law & economics, behavioural.", status: blocked, how: "No job listings"}
+  - {name: "RWI Essen", url: "https://www.rwi-essen.de/en/rwi/career/jobs", type: html, status: blocked, how: "JS-rendered content"}
+  - {name: "IWH Halle", url: "https://www.iwh-halle.de/en/career/jobs/jobs-at-iwh", type: html, status: blocked, how: "JS SPA"}
+  - {name: "J-PAL", url: "https://www.povertyactionlab.org/careers", type: html, note: "[★] Development / RCTs.", status: directly, how: "dedicated"}
+  - {name: "Innovations for Poverty Action (IPA)", url: "https://poverty-action.org/careers", type: html, note: "Development / RCTs.", status: directly, how: "generic scraper"}
+  - {name: "Eval Lab", url: "https://eval-lab.com/", type: html, note: "Paris. [★] RCT evaluation.", status: blocked, how: "Tiny, no careers page"}
+  - {name: "Ecorys", url: "https://careers.ecorys.com/en", type: html, note: "NL/Belgium. Environmental research consultancy.", status: directly, how: "RSS feed · TeamTailor RSS"}
+  - {name: "European Climate Foundation", url: "https://europeanclimatefoundation.occupop-careers.com/", type: html, note: "Brussels. Environment. Occupop JS SPA.", status: blocked, how: "Occupop JS SPA"}
+  - {name: "Public First", url: "https://shgh.teamtailor.com/jobs", type: html, note: "London. Policy/economics. TeamTailor JS SPA.", status: blocked, how: "TeamTailor JS SPA"}
+  - {name: "VITO", url: "https://jobs.vito.be/", type: manual, note: "Belgium. Environmental research. EXCLUDED — not relevant per Marcelo.", status: ignored, how: "Excluded — not relevant"}
+
+  # ═══════════════════════════════════════════════════════════
+  # SWISS PUBLIC SECTOR  (federal economist roles)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "SECO (State Secretariat for Economic Affairs)", url: "https://www.stelle.admin.ch/stelle/en/home.html", type: html, note: "Bern. Economic policy, labour-market analysis.", status: blocked, how: "JS SPA"}
+  - {name: "Swiss Federal Statistical Office (FSO)", url: "https://www.bfs.admin.ch/bfs/en/home.html", type: html, note: "Neuchâtel. Economic surveys & analysis.", status: blocked, how: "No job portal"}
+  - {name: "Swiss Federal Office of Energy (BFE/OFEN)", url: "https://www.stelle.admin.ch/stelle/en/home.html", type: html, note: "Bern. Energy policy — your angle.", status: blocked, how: "Same stelle.admin.ch"}
+  - {name: "FINMA", url: "https://www.finma.ch/en/finma/working-at-finma/current-vacancies/", type: html, note: "Bern. Financial-market regulator.", status: blocked, how: "JS SPA"}
+  - {name: "COMCO/WEKO (Competition Commission)", url: "https://www.weko.admin.ch/", type: html, note: "Bern. Competition economics.", status: blocked, how: "No careers portal"}
+
+  # ═══════════════════════════════════════════════════════════
+  # DISCOVERY  (not job feeds — seed the spontaneous-application target list)
+  # ═══════════════════════════════════════════════════════════
+  - {name: "BIS central bank directory", url: "https://www.bis.org/about/organisation/members", type: manual, note: "Authoritative list of every central bank's website — mine for more careers pages.", status: ignored, how: "Reference, not a job feed"}
+  - {name: "RePEc/IDEAS institution rankings", url: "https://ideas.repec.org/top/top.inst.all.html", type: manual, note: "Seed target list of research groups.", status: ignored, how: "Reference, not a job feed"}
