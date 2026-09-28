@@ -998,7 +998,7 @@ def adapter_ejm():
             if not tm:
                 continue
             title = html.unescape(tm.group(1).strip())
-            if ACAD_EXCLUDE.search(title) or INTERN_EXCLUDE.search(title):
+            if INTERN_EXCLUDE.search(title):
                 continue
             seen.add(pid)
             lm = re.search(r'</button>\s*<br/?>\s*([A-Z][\w\s,.\'-]{2,80}?)(?:\s*\(|<br|\.?\s*<)', chunk)
@@ -1006,13 +1006,14 @@ def adapter_ejm():
             im = re.findall(r'media-body">\s*([^<]{3,80}?)\s*(?:<|$)', chunk)
             inst = im[1].strip() if len(im) > 1 else (im[0].strip() if im else "")
             type_m = re.search(r'col-md-2">\s*(.*?)<hr', chunk, re.S)
-            types = re.findall(r'([A-Z][A-Za-z /()-]{3,40})', type_m.group(1)) if type_m else []
+            types = [t.strip() for t in re.findall(r'([A-Z][A-Za-z /()-]{3,40})', type_m.group(1))
+                     if t.strip() not in ("BLOCK", "ENDBLOCK")] if type_m else []
             dm = re.search(r'class="positive">(\d+ \w+ \d+)', chunk)
             deadline = dm.group(1) if dm else ""
             yield {"source": "EJM", "org": inst or "EJM", "ext_id": pid,
                    "title": title[:130], "loc": loc, "deadline": deadline,
                    "url": f"https://econjobmarket.org/positions/{pid}",
-                   "scan": title.lower()}
+                   "scan": title.lower(), "ejm_types": types}
 
 
 def adapter_joe():
@@ -1028,7 +1029,8 @@ def adapter_joe():
         current_inst = ""
         found = 0
         for m in re.finditer(
-            r'(?:group-sub-header-title">([^<]+)</h6>'
+            r'(?:group-header-title">([^<]+)</h\d>'
+            r'|group-sub-header-title">([^<]+)</h\d>'
             r'|listing-item-header-title">\s*<div[^>]*>.*?</div>\s*'
             r'<a\s+href="(/joe/listing\.php\?JOE_ID=([^&]+)[^"]*)"[^>]*>([^<]+)</a>)',
             body, re.S
@@ -1036,11 +1038,13 @@ def adapter_joe():
             if m.group(1):
                 current_inst = html.unescape(m.group(1).strip())
                 continue
-            joe_id = m.group(3)
+            if m.group(2):
+                continue
+            joe_id = m.group(4)
             if joe_id in seen:
                 continue
-            title = html.unescape(m.group(4).strip())
-            if ACAD_EXCLUDE.search(title) or INTERN_EXCLUDE.search(title):
+            title = html.unescape(m.group(5).strip())
+            if INTERN_EXCLUDE.search(title):
                 continue
             seen.add(joe_id)
             found += 1
@@ -1243,49 +1247,81 @@ def cleanup_alert_inbox():
 
 
 # ── per-job classification into a category ──────────────────────────────────
+_CENTRAL_BANKS = re.compile(
+    r"federal reserve|reserve bank|central bank|banque de france|banque centrale|bundesbank"
+    r"|riksbank|norges bank|bank of finland|banco de espa[nñ]a|bank of england|bank of japan"
+    r"|bank of canada|bank of korea|swiss national bank|national bank of belgium|nbb|hkma"
+    r"|monetary authority|Danmarks Nationalbank|Danmarks NB|banco central|banca d.italia"
+    r"|de nederlandsche bank|oesterreichische nationalbank|bank of israel|bank of greece"
+    r"|central bank of turkey|türkiye cumhuriyet merkez bankası", re.I)
+
+_MULTILATERAL_BANKS = {"EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "IDB", "NDB", "World Bank", "IMF", "OECD"}
+_MULTILATERAL_RX = re.compile(
+    r"\bEBRD\b|\bCEB\b|\bAIIB\b|\bADB\b|Asian Development Bank|\bBSTDB\b|\bBIS\b"
+    r"|\bIDB\b|Inter-American Development Bank|\bNDB\b|New Development Bank"
+    r"|World Bank|\bIMF\b|International Monetary Fund|\bOECD\b", re.I)
+
+_IO_UN = re.compile(
+    r"UNjobs|united nations|^UN\b|UNICEF|UNDP|UNIDO|UNESCO|UNCTAD|UNHCR|WFP|FAO|WHO|ILO"
+    r"|IPCC|WTO|CEPAL|ECLAC|IAEA|IOM|UNEP|UNFPA", re.I)
+
 def classify(it):
     org = it.get("org", "")
-    if org == "IMF" or org == "OECD":
-        return "Policy / IO"
-    if org == "Banque de France":
-        return "Central banks"
     src = it.get("source", "")
-    if "UNjobs" in org or src in ("ReliefWeb", "Impactpool"):
-        return "Policy / IO (UN system)"
-    if org in ("EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "WTO", "Danmarks NB",
-                "CEPAL/ECLAC", "IDB", "NDB", "World Bank"):
-        return "Policy / IO"
-    if org in ("WFP", "IPCC"):
-        return "Policy / IO (UN system)"
-    if org in ("HKMA", "Bank of Finland", "Banco de Espana", "NBB Belgium", "Danmarks NB", "NBB"):
+    ejm = it.get("ejm_types", [])
+    # EJM position types take priority for non-academic roles
+    if ejm:
+        ejm_lo = " ".join(ejm).lower()
+        if "postdoc" in ejm_lo:
+            return "Academic"
+        if any(k in ejm_lo for k in ("assistant prof", "full prof", "associate prof", "lecturer")):
+            return "Academic"
+    # Central banks — check org name first
+    if _CENTRAL_BANKS.search(org):
         return "Central banks"
+    if org in ("HKMA", "Bank of Finland", "Banco de Espana", "NBB Belgium", "Danmarks NB", "NBB",
+               "Banque de France"):
+        return "Central banks"
+    # Multilateral banks — exact match OR regex on full org string (catches "IDB - Inter-American Development Bank")
+    if org in _MULTILATERAL_BANKS or _MULTILATERAL_RX.search(org):
+        return "Multilateral"
+    # Academic institutions — check before IO/UN so "European University Institute" doesn't become IO
+    if re.search(r"universit|college|school of|faculty of", org, re.I) and src not in ("ReliefWeb",):
+        return "Academic"
+    # IOs / UN system — but not if org is a multilateral bank
+    if _IO_UN.search(org) or src in ("ReliefWeb", "Impactpool", "UNjobs"):
+        return "IO/UN"
+    if org in ("WFP", "IPCC"):
+        return "IO/UN"
+    # Think tanks & research
     if org in ("J-PAL", "UNU-WIDER", "IPA", "WZB", "CREI", "UNU", "CMCC", "CGD",
-               "ifo Institute"):
+               "ifo Institute", "Bruegel"):
         return "Think tanks & research"
     if org in ("U St Gallen (SIAW)",):
         return "Academic"
-    if org in ("Ecorys",):
-        return "Consulting"
-    if org in ("Compass Lexecon", "Cornerstone Research", "Frontier Economics",
+    # Consulting
+    if org in ("Ecorys", "Compass Lexecon", "Cornerstone Research", "Frontier Economics",
                "London Economics", "Cambridge Econometrics", "RBB Economics",
                "E.CA Economics", "Copenhagen Economics", "NERA", "CRA", "Brattle"):
         return "Consulting"
+    # Private sector
     if org in ("Lombard Odier", "Mirabaud", "Trafigura", "Wood Mackenzie",
                "Aurora Energy", "Rystad Energy", "Moody's", "Bank J. Safra Sarasin"):
         return "Private sector"
+    # Title-based fallback
     t = it["title"].lower()
     if re.search(r"professor|lecturer|faculty|postdoc|post-doc|ph\.?d|doctoral|tenure|research fellow|readership|assistant prof", t):
         return "Academic"
-    if re.search(r"central bank|reserve bank|banque de|bundesbank|riksbank|norges|central banking", t):
+    if _CENTRAL_BANKS.search(t):
         return "Central banks"
     if re.search(r"consult|economic consulting", t):
         return "Consulting"
-    if re.search(r"\bbank\b|capital|asset manage|investment|trading|insurance|hedge fund|private equity", t):
+    if re.search(r"capital|asset manage|investment|trading|insurance|hedge fund|private equity", t):
         return "Private sector"
     if re.search(r"institute|foundation|think.?tank", t):
         return "Think tanks & research"
-    if re.search(r"economic affairs|policy analyst|policy officer|\beconomist\b", t):
-        return "Policy / IO"
+    if re.search(r"economic affairs|policy analyst|policy officer", t):
+        return "IO/UN"
     return "Academic"   # aggregators are academia-heavy by default
 
 
@@ -1294,7 +1330,7 @@ ACAD_SUB_ORDER = ["Assistant Professor", "Postdoc", "Research Fellow", "Lecturer
 PRIVATE_SUB_ORDER = ["Swiss finance", "Global banks & asset mgrs", "Commodities & energy",
                      "Insurance & rating agencies", "Economic consulting", "Mgmt consulting & tech",
                      "Other private sector"]
-SUB_ORDER = ACAD_SUB_ORDER + PRIVATE_SUB_ORDER + ["Multilateral banks", "IOs/UN/NGOs"]
+SUB_ORDER = ACAD_SUB_ORDER + PRIVATE_SUB_ORDER + ["Multilateral banks", "IOs/UN/NGOs/Govts"]
 
 # Employer → private-sector sub-category. Uses the same buckets as Marcelo's Source Tracker.
 # ponytail: hardcoded because adapter org labels don't line up with sources.yaml source names (CRA vs
@@ -1339,10 +1375,14 @@ def job_type(it):
     if cat in ("Consulting", "Private sector"):   # both sit under Private sector
         return "Private sector", _private_sub(it["org"]) or (
             "Economic consulting" if cat == "Consulting" else "Other private sector")
-    if cat == "Policy / IO":
+    if cat == "Multilateral":
         return "Policy / IO", "Multilateral banks"
+    if cat == "IO/UN":
+        return "Policy / IO", "IOs/UN/NGOs/Govts"
+    if cat == "Policy / IO":
+        return "Policy / IO", ""
     if cat == "Policy / IO (UN system)":
-        return "Policy / IO", "IOs/UN/NGOs"
+        return "Policy / IO", "IOs/UN/NGOs/Govts"
     return cat, ""
 
 
@@ -1758,26 +1798,50 @@ def main():
     def _norm_title(t):
         t = re.sub(r"\[.*?\]", "", t)   # strip [National Staff], [Open to Tier...]
         t = re.sub(r"\(.*?\)", "", t)    # strip (2 positions) etc.
+        t = re.sub(r"\b[PGD]-?\d\b", "", t, flags=re.I)   # strip UN grades P4, G5, D1
+        t = re.sub(r"\bNO-?[A-D]\b", "", t, flags=re.I)   # strip NO-A, NO-B etc.
         return re.sub(r"[^a-z]+", " ", t.lower()).strip()
 
+    def _norm_loc(raw):
+        """Normalize location to a set of words for fuzzy matching."""
+        return set(re.sub(r"[^a-z]+", " ", raw.lower()).strip().split()) if raw else set()
+
+    def _loc_key(words):
+        return " ".join(sorted(words))
+
     deduped = []
-    seen_keys = {}  # norm_title+loc → index in deduped
+    seen_keys = {}      # norm_title+loc_key → index in deduped
+    seen_by_title = {}  # norm_title → [(loc_words, index)] for fuzzy loc match
+
+    def _find_dup(nt, loc_words, org_words):
+        """Find existing entry with same title and overlapping location."""
+        if f"{nt}|{_loc_key(loc_words)}" in seen_keys:
+            return seen_keys[f"{nt}|{_loc_key(loc_words)}"]
+        # fuzzy: same title, both have locations, locations share a word, AND orgs overlap
+        if loc_words and org_words:
+            for prev_words, idx in seen_by_title.get(nt, []):
+                if prev_words and loc_words & prev_words:
+                    prev_org = _norm_loc(deduped[idx].get("org") or "")
+                    if prev_org & org_words:
+                        return idx
+        return None
+
     for it in items:
         nt = _norm_title(it["title"])
-        loc = re.sub(r"[^a-z]+", " ", (it.get("loc") or "").lower()).strip()
-        key = f"{nt}|{loc}"
-        if key in seen_keys:
-            # merge: keep richer entry, fill missing fields from dupe
-            kept = deduped[seen_keys[key]]
+        loc_words = _norm_loc(it.get("loc") or "")
+        org_words = _norm_loc(it.get("org") or "")
+        dup_idx = _find_dup(nt, loc_words, org_words)
+        if dup_idx is not None:
+            kept = deduped[dup_idx]
             for f in ("loc", "deadline", "org"):
                 if not kept.get(f) and it.get(f):
                     kept[f] = it[f]
             if len(it["title"]) > len(kept["title"]):
                 kept["title"] = it["title"]
-            if it.get("url") and "impactpool" not in kept.get("url", ""):
-                pass  # prefer non-aggregator URL
             continue
-        seen_keys[key] = len(deduped)
+        lk = _loc_key(loc_words)
+        seen_keys[f"{nt}|{lk}"] = len(deduped)
+        seen_by_title.setdefault(nt, []).append((loc_words, len(deduped)))
         deduped.append(it)
 
     now = datetime.now().isoformat(timespec="seconds")

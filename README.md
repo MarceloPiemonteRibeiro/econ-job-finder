@@ -45,11 +45,15 @@ The dashboard has three tabs:
 ```
 econ-job-finder/
 ├── index.html                 the live dashboard (rebuilt daily)
+├── target_list.md             spontaneous-application target list
 ├── src/
 │   ├── watcher.py             the scraper + email alert reader + dashboard writer
 │   ├── publish.py             pushes index.html here
 │   ├── dashboard_template.html HTML/CSS/JS template with placeholder data
 │   ├── sources.yaml           the full source directory (277 entries)
+│   ├── preferences.yaml       user profile, field keywords, location tiers
+│   ├── build_master.py        one-off xlsx builder (merges sources + career-center data)
+│   ├── check_urls.py          URL health checker for sources.yaml
 │   └── worldmap.svg           embedded world map (Natural Earth 110m)
 ├── README.md
 └── .gitignore

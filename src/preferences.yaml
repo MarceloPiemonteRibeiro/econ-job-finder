@@ -1,0 +1,115 @@
+# preferences.yaml — Marcelo, econ JM 2026-27
+# Read by the daily job-watch script (Phase 2) and any LLM filter (Phase 4).
+# Edit freely; every downstream filter reads this file.
+
+profile:
+  name: Marcelo
+  languages: [Portuguese, English, French]
+  eu_citizenship: false
+  current_location: Switzerland
+  jmp_signal:
+    - political lending / sovereign
+    - political economy of credit
+    - firm-level energy (secondary work)
+
+roles:
+  strongly_preferred:
+    - research economist at research department of a policy institution
+    - research economist at central bank
+  open_to:
+    - academic postdoc
+    - tenure-track / assistant professor
+    - research economist at international organization
+    - research economist in consulting / private sector
+    - research analyst (topic-dependent, research-adjacent OK)
+  de_prioritize:
+    - roles centered on DSGE modelling
+    - roles centered on industrial organization
+
+fields:
+  primary:
+    - political economy
+    - environmental economics
+  open_to:
+    - labour economics
+    - innovation
+    - firm-level empirical
+    - public economics
+    - development
+    - trade
+    - empirical finance
+  keywords:
+    - political economy
+    - environmental
+    - climate
+    - energy
+    - firm-level
+    - reforms
+    - sovereign
+    - lending
+    - labor
+    - labour
+    - innovation
+    - public finance
+    - development
+
+institutions_ideal_examples:
+  policy_institutions:
+    - EBRD
+    - IDB / BID
+    - IMF
+    - World Bank / DEC
+    - OECD
+    - IEA
+    - WTO
+    - ILO
+    - UNCTAD
+    - AfDB
+    - ADB
+  central_banks:
+    - ECB
+    - BIS
+    - SNB
+    - Bank of England
+    - Banque de France
+    - Banco de Portugal
+    - Banco de España
+    - DNB
+    - Riksbank
+    - Norges Bank
+    - Federal Reserve System
+  think_tanks:
+    - CEPR
+    - Bruegel
+    - PIIE
+    - CGD
+    - Kiel Institute
+    - DIW
+    - ZEW
+
+location_priority:
+  1_switzerland: 1.00
+  2_western_europe: 0.85
+  3_rest_of_europe: 0.70
+  4_asia_australia_us: 0.55
+  5_south_america: 0.40
+  6_africa: 0.25
+
+contract:
+  preferred: [permanent, long-term, tenure-track]
+  ok_if_postdoc: true
+
+compensation:
+  minimum_eur_month: 3000
+  higher_is_better: true
+
+deal_breakers:
+  - job description states German language is REQUIRED (not merely "preferred" or "a plus")
+  - salary explicitly stated below 3000 EUR/month gross
+
+hard_constraints_informational:  # do not auto-filter; flag as caveat
+  - no EU citizenship (some EU/ECB career-path roles will exclude)
+
+scoring_hint: |
+  Higher = better fit. Combine role tier + field match + location tier + contract length.
+  Deal-breakers hard-fail. Informational constraints get a warning, not exclusion.

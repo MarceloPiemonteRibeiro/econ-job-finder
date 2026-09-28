@@ -8,6 +8,10 @@ dashboard.html
 __pycache__/
 *.pyc
 
+# Generated reports
+url_check_report.md
+master_sources.xlsx
+
 # Local development files
 .vscode/
 .idea/
