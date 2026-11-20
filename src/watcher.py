@@ -52,6 +52,12 @@ WORKDAY = [
 SMARTRECRUITERS = [("OECD", "OECD")]
 WD_QUERIES = ["economist", "research", "economics"]
 
+# ── Oracle Recruiting Cloud (Candidate Experience) tenants: (label, host, site) ──
+ORACLE_CX = [
+    ("Bank of England", "eoff.fa.em1.ukg.oraclecloud.com", "CX_3001"),  # London/Leeds
+    # ponytail: Bank of Thailand (CX_1) and UBP also run Oracle CX — add host+site here if wanted.
+]
+
 # ── aggregator search URLs (already economics-filtered) ─────────────────────
 UNJOBS_SEARCHES = ["economist", "economics", "trade", "climate", "development"]
 UNJOBS_CAP = 50
@@ -146,6 +152,32 @@ def adapter_smartrecruiters():
             yield {"source": label, "org": label, "ext_id": pid, "title": title,
                    "loc": loc.get("fullLocation") or loc.get("city") or "", "deadline": "",
                    "url": f"https://jobs.smartrecruiters.com/{comp}/{pid}", "scan": title.lower()}
+
+
+def adapter_oracle_cx():
+    # Oracle Recruiting Cloud JSON API — same shape across tenants: items[0].requisitionList[].
+    # BoE classifies as a central bank, so ACAD_EXCLUDE (PhD) won't touch it; INTERN_EXCLUDE
+    # still drops internships globally. Role filter via ROLE_RE on the title.
+    for label, host, site in ORACLE_CX:
+        api = (f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
+               f"?onlyData=true&expand=requisitionList.secondaryLocations"
+               f"&finder=findReqs;siteNumber={site},facetsList=LOCATIONS,"
+               f"limit=200,sortBy=POSTING_DATES_DESC")
+        txt = curl_get(api, timeout=30) or urllib_get(api, timeout=20)
+        try:
+            items = json.loads(txt).get("items") or []
+        except Exception:
+            continue
+        for p in (items[0].get("requisitionList", []) if items else []):
+            title = (p.get("Title") or "").strip()
+            if not ROLE_RE.search(title):
+                continue
+            jid = str(p.get("Id", ""))
+            yield {"source": label, "org": label, "ext_id": jid, "title": title[:130],
+                   "loc": (p.get("PrimaryLocation") or "").strip(),
+                   "deadline": (p.get("PostingEndDate") or "")[:10],
+                   "url": f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{jid}",
+                   "scan": title.lower()}
 
 
 MAXPAGES = 8   # paginate aggregators up to this many pages; stop early when a page adds nothing new
@@ -1493,6 +1525,7 @@ def tracked_feeds():
     """Every feed the watcher pulls: label → how it's pulled."""
     feeds = {}
     for how, labels in [("Workday feed", [w[0] for w in WORKDAY]), ("SmartRecruiters feed", [s[0] for s in SMARTRECRUITERS]),
+                        ("Oracle feed", [o[0] for o in ORACLE_CX]),
                         ("aggregator", AGGREGATORS), ("careers page", PAGE_ADAPTERS + [g[0] for g in GENERIC_SITES]),
                         ("email alert", [a[0] for a in ALERT_SENDERS]), ("job board", [b[1] for b in OPEN_BOARDS])]:
         for label in labels:
@@ -1818,7 +1851,7 @@ def main():
         sys.stdout = sys.stderr = _Tee(_stdout, log)
 
     conn = db_connect()   # dry-run reads NEW flags too; only a sent email (or --init) commits
-    items = (list(adapter_workday()) + list(adapter_smartrecruiters()) + list(adapter_unjobs())
+    items = (list(adapter_workday()) + list(adapter_smartrecruiters()) + list(adapter_oracle_cx()) + list(adapter_unjobs())
              + list(adapter_jobsacuk()) + list(adapter_inomics()) + list(adapter_euraxess())
              + list(adapter_ebrd()) + list(adapter_ceb()) + list(adapter_aiib())
              + list(adapter_adb()) + list(adapter_bstdb())

@@ -127,7 +127,7 @@ sources:
   - {name: "Danmarks Nationalbank", url: "https://www.nationalbanken.dk/en/careers", type: html, status: directly, how: "Workday"}
   - {name: "Sveriges Riksbank", url: "https://www.riksbank.se/en-gb/about-the-riksbank/come-work-with-us/available-vacancies/", type: html, note: "Very research-active, recruits internationally.", status: blocked, how: "JS SPA"}
   - {name: "Norges Bank", url: "https://www.norges-bank.no/en/topics/about/Careers/", type: html, note: "Oslo. Research + NBIM.", status: blocked, how: "JS SPA"}
-  - {name: "Bank of England", url: "https://www.bankofengland.co.uk/careers", type: html, note: "Large research staff.", status: blocked, how: "Oracle ATS"}
+  - {name: "Bank of England", url: "https://eoff.fa.em1.ukg.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_3001/jobs", type: html, note: "Large research staff. London/Leeds. Oracle ATS careers page is a JS wall, but the recruiting JSON API responds.", status: directly, how: "Oracle Recruiting API"}
 
   # ═══════════════════════════════════════════════════════════
   # CENTRAL BANKS — rest of Europe
@@ -213,7 +213,7 @@ sources:
   # ═══════════════════════════════════════════════════════════
   - {name: "UNECE", url: "https://unece.org/about-unece/job-opportunities", type: html, note: "Geneva. Economic Cooperation & Trade Div. Partially covered via UNjobs.", status: blocked, how: "403 · partial via UNjobs"}
   - {name: "ITU", url: "https://www.itu.int/en/careers", type: html, note: "Geneva. Data & Analytics Div.", status: alert, how: "your alert"}
-  - {name: "ITC (International Trade Centre)", url: "https://intracen.org/about-us/careers/job-opportunities", type: html, note: "Geneva. UN/WTO joint. Market Analysis & Research.", status: blocked, how: "403"}
+  - {name: "ITC (International Trade Centre)", url: "https://intracen.org/about-us/careers/job-opportunities", type: html, note: "Geneva. UN/WTO joint. Market Analysis & Research. Site is Cloudflare-blocked (403); trade/econ roles already arrive via the UNjobs aggregator.", status: blocked, how: "403 (Cloudflare) · partial via UNjobs"}
   - {name: "WEF (World Economic Forum)", url: "https://www.weforum.org/about/careers/", type: html, note: "Geneva. Centre for the New Economy & Society.", status: alert, how: "your alert"}
   - {name: "IPCC", url: "https://www.ipcc.ch/about/vacancies/", type: html, note: "Geneva. Climate.", status: blocked, how: "few vacancies, checked manually"}
   - {name: "IISD", url: "https://www.iisd.org/mission-and-goals/employment-and-consulting", type: html, note: "Geneva. [★] Environment–trade.", status: blocked, how: "JS SPA"}
