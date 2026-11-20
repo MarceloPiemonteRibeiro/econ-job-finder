@@ -7,8 +7,8 @@ from pypdf import PdfReader
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-BASE = Path(__file__).resolve().parent
-S = BASE / "data"  # put sheet.csv and resources.pdf here before running
+BASE = Path(r"C:/Users/Marcelo/Cover_letter")
+S = Path(r"C:/Users/Marcelo/AppData/Local/Temp/claude/C--Users-Marcelo-Cover-letter/1d146cbd-9ebf-4318-b100-6bce4637afb2/scratchpad")
 OUT = BASE / "master_sources.xlsx"
 AUTO = {"imf", "banque de france", "oecd", "ebrd", "ceb", "aiib", "unjobs", "jobs.ac.uk", "inomics", "euraxess", "impactpool"}
 

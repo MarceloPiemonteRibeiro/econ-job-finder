@@ -127,7 +127,16 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
 .ln.who { display: flex; flex-wrap: wrap; column-gap: 14px; }
 .due { color: var(--red); font-weight: 600; }
 .due.past { color: var(--ink-3); font-weight: 400; }
+.added { color: var(--ink-3); font-weight: 400; font-style: italic; }
 .ln.det { font-size: 14px; font-style: italic; color: var(--ink-3); }
+.job { padding-right: 92px; }
+.votes { position: absolute; right: 0; top: 12px; display: flex; gap: 6px; }
+.votes button { appearance: none; background: none; border: 1px solid var(--rule); border-radius: 999px;
+  padding: 3px 9px; cursor: pointer; font-size: 15px; line-height: 1.2; opacity: .5; }
+.votes button:hover { opacity: 1; }
+.votes button.on { opacity: 1; }
+.votes button.tu.on { background: var(--ok-bg); border-color: var(--ok-line); }
+.votes button.td.on { background: var(--bad-bg); border-color: var(--bad-line); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 16px; font: 400 14.5px/1.45 var(--serif); color: var(--ink-2); }
 .meta .via { font: 400 12px/1.6 var(--mono); color: var(--ink-3); }
@@ -226,7 +235,7 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
       <details class="facet" open><summary class="eyebrow">Deadline</summary><div class="tree" id="f-due"></div></details>
     </aside>
     <div class="results">
-      <div class="rhead"><p id="r-count"></p><select id="r-sort" class="chip"><option value="default">Sort: Default</option><option value="deadline">Sort: Deadline</option><option value="az">Sort: A–Z</option><option value="loc">Sort: Location</option><option value="emp">Sort: Employer</option></select><button type="button" class="chip" id="r-clear" hidden>Clear filters</button></div>
+      <div class="rhead"><p id="r-count"></p><select id="r-sort" class="chip"><option value="default">Sort: Default</option><option value="deadline">Sort: Deadline</option><option value="az">Sort: A–Z</option><option value="loc">Sort: Location</option><option value="emp">Sort: Employer</option></select><select id="r-filter" class="chip"><option value="">Filter: All</option><option value="up">Filter: 👍 Suitable</option><option value="down">Filter: 👎 Not suitable</option></select><button type="button" class="chip" id="r-export" title="Download votes.json; drop it next to watcher.py so the next daily build bakes your votes into the dashboard">Save votes</button><label class="chip" for="r-import" title="Load votes.json from another device">Load votes<input id="r-import" type="file" accept="application/json" hidden></label><button type="button" class="chip" id="r-clear" hidden>Clear filters</button></div>
       <div id="r-list"></div>
     </div>
   </section>
@@ -262,7 +271,42 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
   const SEP = '::';
   const key = (a, b) => (b ? a + SEP + b : a);
   const fmt = n => n.toLocaleString('en');
-  const S = { type: '', place: '', due: '', q: '', fresh: false, board: '', status: '', sq: '' };
+  const S = { type: '', place: '', due: '', q: '', fresh: false, board: '', status: '', sq: '', vote: '' };
+
+  // Votes: baked-in from votes.json (the daily rebuild) merged with localStorage overrides.
+  // localStorage wins when both have a key; baked fills in anything localStorage doesn't yet know about.
+  const baked = D.votes || {};
+  const votes = (() => { try { return JSON.parse(localStorage.getItem('ejf-votes') || '{}'); } catch { return {}; } })();
+  for (const [k, v] of Object.entries(baked)) if (!(k in votes)) votes[k] = v;
+  try { localStorage.setItem('ejf-votes', JSON.stringify(votes)); } catch {}
+  const voteKey = r => r.id || r.url || (r.source + '|' + r.title);
+  const voteOf = r => votes[voteKey(r)] || 0;   // 1=up, -1=down, 0=none
+  const voteRank = r => -voteOf(r);              // up (−1) sorts before none (0) before down (+1)
+  function setVote(r, v) {
+    const k = voteKey(r);
+    if ((votes[k] || 0) === v) delete votes[k]; else votes[k] = v;
+    try { localStorage.setItem('ejf-votes', JSON.stringify(votes)); } catch {}
+    renderRoles();
+  }
+  function exportVotes() {
+    const blob = new Blob([JSON.stringify(votes, null, 2)], { type: 'application/json' });
+    const a = Object.assign(document.createElement('a'),
+      { href: URL.createObjectURL(blob), download: 'votes.json' });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  function importVotes(file) {
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const incoming = JSON.parse(fr.result);
+        Object.assign(votes, incoming);
+        localStorage.setItem('ejf-votes', JSON.stringify(votes));
+        renderRoles();
+      } catch (e) { alert('Could not read votes file: ' + e.message); }
+    };
+    fr.readAsText(file);
+  }
 
   // Tiny DOM builder: every scraped string goes in as text, never as HTML.
   function el(tag, props, ...kids) {
@@ -308,11 +352,13 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
   // ── Roles ──
   const hit = (sel, a, b) => !sel || sel === a || sel === key(a, b);
   const boardOk = r => !S.board || r.source === S.board;
+  const voteOk = r => !S.vote || (S.vote === 'up' ? voteOf(r) === 1 : voteOf(r) === -1);
   const pass = (r, skip) =>
     (skip === 'type' || hit(S.type, r.cat, r.sub)) &&
     (skip === 'place' || hit(S.place, r.region, r.country)) &&
     (skip === 'due' || dueOk(r)) &&
     (skip === 'board' || boardOk(r)) &&
+    (skip === 'vote' || voteOk(r)) &&
     (!S.q || r.hay.includes(S.q)) &&
     (!S.fresh || r.new);
   const subRank = s => { const i = D.subOrder.indexOf(s); return i < 0 ? D.subOrder.length : i; };
@@ -325,7 +371,8 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
     loc: (x, y) => (x.loc || 'zzz').localeCompare(y.loc || 'zzz') || x.title.localeCompare(y.title),
     emp: (x, y) => who(x).localeCompare(who(y)) || x.title.localeCompare(y.title),
   };
-  const byRole = (x, y) => sortFns[$('#r-sort').value](x, y);
+  // Thumbs rank is the primary order on every sort: 👍 first, unrated, 👎 last.
+  const byRole = (x, y) => (voteRank(x) - voteRank(y)) || sortFns[$('#r-sort').value](x, y);
 
   // Facet tree: mother rows in a fixed order; the selected mother opens its sub rows.
   // Counts respect every other active filter, so they always say what a click will show.
@@ -382,7 +429,11 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
 
   const fmtDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   function dueText(r) {
-    if (r.days == null) return r.deadline ? ['Closes ' + r.deadline, 'due'] : null;
+    if (r.days == null) {
+      if (r.deadline) return ['Closes ' + r.deadline, 'due'];
+      if (r.added) return ['Added to Econ Job Finder ' + fmtDate(r.added), 'added'];
+      return null;
+    }
     if (r.days < 0) return [`Closed ${fmtDate(r.due)}`, 'due past'];
     const rel = r.days === 0 ? 'today' : r.days === 1 ? 'tomorrow' : `in ${r.days} days`;
     return [`Closes ${fmtDate(r.due)} (${rel})`, 'due'];
@@ -399,12 +450,19 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
       : titleText;
     const from = !r.employer ? `via ${r.source}` : r.employer === r.source ? r.source : `${r.employer} (via ${r.source})`;
     const due = dueText(r);
+    const v = voteOf(r);
+    const voteBox = el('div', { class: 'votes' },
+      el('button', { type: 'button', class: 'tu' + (v === 1 ? ' on' : ''), 'aria-label': 'Mark suitable',
+        'aria-pressed': String(v === 1), onclick: () => setVote(r, 1) }, '👍'),
+      el('button', { type: 'button', class: 'td' + (v === -1 ? ' on' : ''), 'aria-label': 'Mark not suitable',
+        'aria-pressed': String(v === -1), onclick: () => setVote(r, -1) }, '👎'));
     return el('li', { class: r.new ? 'job is-new' : 'job' },
       r.new && el('span', { class: 'sr' }, 'New role: '),
       titleLine,
       el('div', { class: r.loc ? 'ln' : 'ln none' }, r.loc || 'Location not listed'),
       el('div', { class: 'ln who' }, el('span', {}, from), due && el('span', { class: due[1] }, due[0])),
-      r.details.length > 0 && el('div', { class: 'ln det' }, r.details.join(' · ')));
+      r.details.length > 0 && el('div', { class: 'ln det' }, r.details.join(' · ')),
+      voteBox);
   }
 
   function renderRoles() {
@@ -415,7 +473,7 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
     dueFacet();
     boardFacet();
     const rows = D.roles.filter(r => pass(r));
-    const filtered = S.type || S.place || S.due || S.board || S.q || S.fresh;
+    const filtered = S.type || S.place || S.due || S.board || S.q || S.fresh || S.vote;
     $('#r-count').textContent = filtered ? `${fmt(rows.length)} of ${fmt(D.roles.length)} roles` : `All ${fmt(rows.length)} roles`;
     $('#r-clear').hidden = !filtered;
     const groups = group(rows, r => r.cat, r => r.sub);
@@ -436,9 +494,10 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
   }
 
   function clearRoles() {
-    Object.assign(S, { type: '', place: '', due: '', board: '', q: '', fresh: false });
+    Object.assign(S, { type: '', place: '', due: '', board: '', q: '', fresh: false, vote: '' });
     $('#q').value = '';
     $('#fresh').checked = false;
+    $('#r-filter').value = '';
     renderRoles();
   }
 
@@ -551,6 +610,9 @@ a.t:hover, a.name:hover { text-decoration: underline; text-decoration-color: var
   $('#sq').addEventListener('input', e => { S.sq = e.target.value.trim().toLowerCase(); renderSources(); });
   $('#r-clear').addEventListener('click', clearRoles);
   $('#r-sort').addEventListener('change', renderRoles);
+  $('#r-filter').addEventListener('change', e => { S.vote = e.target.value; renderRoles(); });
+  $('#r-export').addEventListener('click', exportVotes);
+  $('#r-import').addEventListener('change', e => { if (e.target.files[0]) importVotes(e.target.files[0]); e.target.value = ''; });
 
   // ── Map ──
   // Some names in the world-atlas differ from what place() emits — this table normalises them.

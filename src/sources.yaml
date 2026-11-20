@@ -24,6 +24,7 @@ sources:
   - {name: "EJM", url: "https://econjobmarket.org/positions", type: manual, note: "Saved search + email alerts. Central board.", status: ignored, how: "You check manually"}
   - {name: "JOE (AEA)", url: "https://www.aeaweb.org/joe/listings", type: manual, note: "RSS if available, else email digest.", status: ignored, how: "You check manually"}
   - {name: "Inomics", url: "https://inomics.com/jobs", type: manual, note: "Email alerts, Europe-heavy.", status: directly, how: "aggregator"}
+  - {name: "Economist Jobs", url: "https://jobs.economist.com/jobs/", type: rss, note: "RSS feed jobsrss/, 'Employer: Role' titles.", status: directly, how: "RSS"}
   - {name: "Economic Misfit board", url: "https://theeconomicmisfit.com/econjobboard/", type: html, status: blocked, how: "Embedded widget"}
 
   # ═══════════════════════════════════════════════════════════

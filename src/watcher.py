@@ -36,7 +36,7 @@ GERMAN_REQ = re.compile(r"german\s+(language\s+)?(is\s+)?(required|mandatory|ess
 ROLE_RE = re.compile(r"econom|research|policy analyst|policy officer|fellow|quantitative|statistic|lecturer|professor|post-?doc|economist", re.I)
 # Roles to drop: too senior (assoc/full prof), too junior (PhD/doctoral student), or internships
 ACAD_EXCLUDE = re.compile(r"associate professor|full professor|\bph\.?d\b|\bdoctoral\b|pre-?doctoral|predoctoral", re.I)
-INTERN_EXCLUDE = re.compile(r"\binterns?\b|\binternships?\b|\broster\b|\btalent\s*pool\b", re.I)
+INTERN_EXCLUDE = re.compile(r"\binterns?\b|\biterns?\b|\binternships?\b|\broster\b|\btalent\s*pool\b", re.I)
 
 # ── employer ATS feeds (clean JSON) ─────────────────────────────────────────
 WORKDAY = [
@@ -686,6 +686,35 @@ def adapter_cmcc():
                "loc": "Italy", "deadline": "", "url": url, "scan": title.lower()}
 
 
+def adapter_economist():
+    """The Economist Jobs: RSS feed. Title format 'Employer: Role'; country is the last line of the description."""
+    h = curl_get("https://jobs.economist.com/jobsrss/")
+    if not h: return
+    seen = set()
+    for m in re.finditer(r"<item>(.*?)</item>", h, re.S):
+        block = m.group(1)
+        tm = re.search(r"<title>([^<]+)</title>", block)
+        lm = re.search(r"<link>([^<]+)</link>", block)
+        if not (tm and lm): continue
+        raw_title = html.unescape(tm.group(1)).strip()
+        url = html.unescape(lm.group(1)).split("?")[0]
+        jid_m = re.search(r"/job/(\d+)/", url)
+        jid = jid_m.group(1) if jid_m else url
+        if jid in seen: continue
+        seen.add(jid)
+        org, title = raw_title.split(": ", 1) if ": " in raw_title else ("Economist Jobs", raw_title)
+        if not ROLE_RE.search(title) and not ROLE_RE.search(org): continue
+        if INTERN_EXCLUDE.search(title): continue
+        loc = ""
+        dm = re.search(r"<description>(.*?)</description>", block, re.S)
+        if dm:
+            lines = [l.strip() for l in html.unescape(dm.group(1)).splitlines() if l.strip()]
+            if lines: loc = lines[-1][:60]
+        yield {"source": "Economist Jobs", "org": org[:80], "ext_id": jid,
+               "title": title[:130], "loc": loc, "deadline": "",
+               "url": url, "scan": raw_title.lower()}
+
+
 def adapter_wto_page():
     """WTO: static vacancy page (supplements Workday adapter for non-ATS listings)."""
     h = curl_get("https://www.wto.org/english/thewto_e/vacan_e/vacan_e.htm")
@@ -946,7 +975,11 @@ _MORE_ALERTS = [   # patterns tested against Gmail IMAP FROM: use full email or 
 for _label, _pat in _MORE_ALERTS:
     ALERT_SENDERS.append((_label, _pat, _GENERIC_ANCHOR, True))
 # Extra from-patterns to archive (registration confirmations, not recurring alerts)
-ARCHIVE_EXTRA = ["candidatemanager", "substack.com", "teamtailor-mail", "careers.nbb.be"]
+ARCHIVE_EXTRA = ["candidatemanager", "substack.com", "teamtailor-mail", "careers.nbb.be",
+                 "juliusbaer.com", "jobsalert@cagi.ch", "linkedin.com",
+                 "makesense.org", "theorg.com"]
+# Also archive the daily dashboard emails we send to ourselves (subject-based).
+ARCHIVE_SUBJECTS = ["[Job watch]"]
 IMAP_DAYS = 7  # look back this many days
 
 
@@ -1222,10 +1255,12 @@ def cleanup_alert_inbox():
         return 0
     since = (datetime.now() - timedelta(days=IMAP_DAYS)).strftime("%d-%b-%Y")
     archived = 0
-    all_patterns = [fp for _, fp, _, _ in ALERT_SENDERS] + ARCHIVE_EXTRA
-    for from_pat in all_patterns:
+    from_patterns = [fp for _, fp, _, _ in ALERT_SENDERS] + ARCHIVE_EXTRA
+    searches = [f'(FROM "{p}" SINCE {since})' for p in from_patterns] \
+             + [f'(SUBJECT "{s}" SINCE {since})' for s in ARCHIVE_SUBJECTS]
+    for q in searches:
         try:
-            _, nums = M.search(None, f'(FROM "{from_pat}" SINCE {since})')
+            _, nums = M.search(None, q)
         except Exception:
             continue
         for num in (nums[0] or b"").split():
@@ -1423,7 +1458,7 @@ def parse_sources():
 # ── dashboard: tracking status per source ───────────────────────────────────
 # Labels of the hand-written adapters wired in main() — keep in sync. The Workday / SmartRecruiters /
 # GENERIC_SITES / ALERT_SENDERS / OPEN_BOARDS labels are read from their own lists.
-AGGREGATORS = ["UNjobs", "jobs.ac.uk", "Inomics", "Euraxess", "Impactpool", "ReliefWeb", "CAGI"]
+AGGREGATORS = ["UNjobs", "jobs.ac.uk", "Inomics", "Euraxess", "Impactpool", "ReliefWeb", "CAGI", "Economist Jobs"]
 PAGE_ADAPTERS = ["EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "HKMA", "J-PAL", "UNU-WIDER", "Bank of Finland",
                  "CEPAL", "WZB", "Ecorys", "CRA", "CREI", "SIAW", "WTO", "UNU", "CMCC",
                  "Brattle", "Moodys", "CGD", "Safra", "ifo"]
@@ -1689,12 +1724,19 @@ def write_dashboard(jobs, directory):
     for j in jobs:
         region, country = place(j)
         title, employer, loc, details = card(j, country)
-        roles.append({"title": title, "url": safe(j["url"]), "employer": employer, "source": j["source"], "loc": loc,
+        roles.append({"id": f"{j['source']}::{j['ext_id']}",
+                      "title": title, "url": safe(j["url"]), "employer": employer, "source": j["source"], "loc": loc,
                       "details": details, "deadline": j["deadline"], "due": iso_date(j["deadline"]), "cat": j["cat"],
-                      "sub": j.get("sub", ""), "region": region, "country": country, "new": j["new"]})
+                      "sub": j.get("sub", ""), "region": region, "country": country, "new": j["new"],
+                      "added": j.get("added", "")})
     sources = [{**s, "url": safe(s["url"])} for s in source_rows(directory, jobs)]
+    votes_path = BASE / "votes.json"
+    try:
+        baked_votes = json.loads(votes_path.read_text(encoding="utf-8")) if votes_path.exists() else {}
+    except Exception:
+        baked_votes = {}
     data = {"stamp": f"{datetime.now():%d %b %Y · %H:%M}", "catOrder": CAT_ORDER, "subOrder": SUB_ORDER,
-            "regionOrder": REGION_ORDER, "roles": roles, "sources": sources}
+            "regionOrder": REGION_ORDER, "roles": roles, "sources": sources, "votes": baked_votes}
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")   # can't close the <script> early
     head = ('<!doctype html>\n<html lang="en"><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n')
@@ -1788,7 +1830,7 @@ def main():
              + list(adapter_unu_careers()) + list(adapter_cmcc())
              + list(adapter_brattle()) + list(adapter_moodys())
              + list(adapter_cgd()) + list(adapter_safra()) + list(adapter_ifo())
-             + list(adapter_wto_page()) + list(adapter_generic())
+             + list(adapter_wto_page()) + list(adapter_economist()) + list(adapter_generic())
              + list(adapter_impactpool()) + list(adapter_reliefweb())
              + list(adapter_cagi()) + list(adapter_imap())
              + list(adapter_open_boards())
@@ -1858,6 +1900,25 @@ def main():
         it["cat"], it["sub"] = job_type(it)
         pending.append((it["source"], it["ext_id"], it["title"], it["url"], now))
         jobs.append(it)
+
+    # Attach "added to Econ Job Finder" date: first_seen from DB, or today for new jobs.
+    today_iso = datetime.now().date().isoformat()
+    for j in jobs:
+        if j["new"] or conn is None:
+            j["added"] = today_iso
+        else:
+            row = conn.execute("SELECT first_seen FROM seen WHERE source=? AND ext_id=?",
+                               (j["source"], j["ext_id"])).fetchone()
+            j["added"] = (row[0][:10] if row and row[0] else today_iso)
+
+    # Drop expired roles: past deadline, or (no deadline and added >30d ago).
+    stale_cutoff = (datetime.now().date() - timedelta(days=30)).isoformat()
+    def _alive(j):
+        due = iso_date(j.get("deadline", ""))
+        if due:
+            return due >= today_iso
+        return j.get("added", today_iso) >= stale_cutoff
+    jobs = [j for j in jobs if _alive(j)]
 
     def commit_seen():
         if conn is not None:

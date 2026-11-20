@@ -1,10 +1,8 @@
 import re, sys, urllib.request, urllib.error, ssl, socket
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
-BASE = Path(__file__).resolve().parent
-SRC = str(BASE / "sources.yaml")
-OUT = str(BASE / "url_check_report.md")
+SRC = r"C:/Users/Marcelo/Cover_letter/sources.yaml"
+OUT = r"C:/Users/Marcelo/Cover_letter/url_check_report.md"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 CTX = ssl.create_default_context()
 
