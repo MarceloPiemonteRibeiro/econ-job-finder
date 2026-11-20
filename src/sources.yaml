@@ -244,7 +244,7 @@ sources:
   - {name: "Morgan Stanley Research", url: "https://www.morganstanley.com/careers", type: html, status: blocked, how: "JS SPA"}
   - {name: "Bank of America (Global Research)", url: "https://careers.bankofamerica.com/en-us", type: html, status: blocked, how: "JS SPA"}
   - {name: "Citi Research", url: "https://jobs.citi.com/", type: html, status: blocked, how: "JS SPA"}
-  - {name: "Barclays Research", url: "https://search.jobs.barclays/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Barclays Research", url: "https://barclays.wd3.myworkdayjobs.com/External_Career_Site_Barclays", type: html, note: "Workday tenant; econ/strategist roles (e.g. Senior Regional Economist).", status: directly, how: "Workday API"}
   - {name: "Deutsche Bank Research", url: "https://careers.db.com/", type: html, status: blocked, how: "JS SPA"}
   - {name: "BNP Paribas", url: "https://group.bnpparibas/en/careers", type: html, status: blocked, how: "JS SPA"}
   - {name: "HSBC (Global Research)", url: "https://www.hsbc.com/careers", type: html, status: blocked, how: "JS SPA"}
@@ -253,7 +253,7 @@ sources:
   - {name: "BlackRock (Investment Institute)", url: "https://careers.blackrock.com/", type: html, status: blocked, how: "JS SPA"}
   - {name: "PIMCO", url: "https://www.pimco.com/en-us/our-firm/careers", type: html, status: blocked, how: "403"}
   - {name: "Amundi", url: "https://about.amundi.com/our-job-board", type: html, note: "Paris. Largest EU asset manager.", status: blocked, how: "JS SPA"}
-  - {name: "Schroders", url: "https://www.schroders.com/en/global/individual/careers/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Schroders", url: "https://ekbq.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2/jobs", type: html, note: "London asset manager. Oracle recruiting JSON API responds.", status: directly, how: "Oracle Recruiting API"}
   - {name: "AQR Capital", url: "https://careers.aqr.com/", type: html, note: "Quant, hires PhDs.", status: directly, how: "Greenhouse API"}
   - {name: "Bridgewater Associates", url: "https://www.bridgewater.com/working-at-bridgewater", type: html, note: "Macro.", status: blocked, how: "JS SPA"}
   - {name: "Man Group", url: "https://www.man.com/careers", type: html, note: "Quant/macro.", status: directly, how: "Greenhouse API"}
@@ -264,9 +264,9 @@ sources:
   - {name: "Trafigura", url: "https://www.trafigura.com/careers/", type: html, note: "Geneva. Commodities economist / market analysis.", status: directly, how: "generic scraper"}
   - {name: "Vitol", url: "https://jobs.smartrecruiters.com/Vitol", type: html, note: "Geneva. Energy economist. SmartRecruiters public API.", status: directly, how: "SmartRecruiters API"}
   - {name: "Mercuria", url: "https://www.mercuria.com/jobs", type: html, note: "Geneva. Market analysis.", status: blocked, how: "JS SPA"}
-  - {name: "Gunvor", url: "https://gunvorgroup.com/careers/", type: html, note: "Geneva. Market research.", status: blocked, how: "403"}
+  - {name: "Gunvor", url: "https://gunvor.wd3.myworkdayjobs.com/Gunvor_Careers", type: html, note: "Geneva. Market research. Workday API.", status: directly, how: "Workday API"}
   - {name: "Shell (Scenarios/Economics)", url: "https://www.shell.com/careers.html", type: html, status: blocked, how: "JS SPA"}
-  - {name: "BP (Economics team)", url: "https://www.bp.com/en/global/corporate/careers.html", type: html, status: blocked, how: "JS SPA"}
+  - {name: "BP (Economics team)", url: "https://bpinternational.wd3.myworkdayjobs.com/bpCareers", type: html, note: "Energy. Workday API.", status: directly, how: "Workday API"}
   - {name: "TotalEnergies", url: "https://careers.totalenergies.com/", type: html, status: blocked, how: "JS SPA"}
   - {name: "Wood Mackenzie", url: "https://www.woodmac.com/careers/", type: html, note: "Energy research/consulting.", status: directly, how: "generic scraper"}
   - {name: "Aurora Energy Research", url: "https://auroraer.com/careers/", type: html, note: "Oxford. Energy-market modelling.", status: directly, how: "generic scraper"}
@@ -326,7 +326,7 @@ sources:
   - {name: "Meta (Economics)", url: "https://www.metacareers.com/jobs", type: html, status: blocked, how: "JS SPA"}
   - {name: "Uber (Economics)", url: "https://www.uber.com/us/en/careers/", type: html, status: blocked, how: "JS SPA"}
   - {name: "Booking.com (Economists)", url: "https://careers.booking.com/", type: html, note: "Amsterdam.", status: blocked, how: "JS SPA"}
-  - {name: "Visa (Economics)", url: "https://corporate.visa.com/en/jobs/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Visa (Economics)", url: "https://visa.wd5.myworkdayjobs.com/Visa", type: html, note: "Known PhD-econ hirer. Workday API.", status: directly, how: "Workday API"}
   - {name: "Mastercard (Economics Institute)", url: "https://careers.mastercard.com/", type: html, status: alert, how: "your alert"}
 
   # ═══════════════════════════════════════════════════════════

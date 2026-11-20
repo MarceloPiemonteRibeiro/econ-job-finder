@@ -49,6 +49,10 @@ WORKDAY = [
     ("Lombard Odier",    "lombardodier.wd3.myworkdayjobs.com", "lombardodier", "Lombard_Odier_Careers"),
     ("WFP",              "wfp.wd3.myworkdayjobs.com",         "wfp",          "job_openings"),
     ("Federal Reserve System", "rb.wd5.myworkdayjobs.com",    "rb",           "FRS"),  # all 12 regional Feds + Board
+    ("Barclays",         "barclays.wd3.myworkdayjobs.com", "barclays",     "External_Career_Site_Barclays"),
+    ("BP",               "bpinternational.wd3.myworkdayjobs.com", "bpinternational", "bpCareers"),  # energy
+    ("Visa",             "visa.wd5.myworkdayjobs.com",    "visa",          "Visa"),
+    ("Gunvor",           "gunvor.wd3.myworkdayjobs.com",  "gunvor",        "Gunvor_Careers"),  # energy
 ]
 SMARTRECRUITERS = [("OECD", "OECD"), ("Vitol", "Vitol")]
 WD_QUERIES = ["economist", "research", "economics"]
@@ -59,6 +63,7 @@ ORACLE_CX = [
     ("Bank of Thailand", "fa-exfj-saasfaprod1.fa.ocs.oraclecloud.com", "CX_1"),       # Bangkok (+ PIER)
     ("Union Bancaire Privée (UBP)", "iaadtu.fa.ocs.oraclecloud.eu", "CX_1"),          # Geneva
     ("IRENA", "eexh.fa.em3.oraclecloud.com", "CX_1"),                                # Abu Dhabi/Bonn — energy
+    ("Schroders", "ekbq.fa.em2.oraclecloud.com", "CX_2"),                            # London asset manager
 ]
 
 # ── Greenhouse boards (public API: boards-api.greenhouse.io/v1/boards/<token>/jobs) ──
@@ -1417,7 +1422,8 @@ def classify(it):
     # Private sector
     if org in ("Lombard Odier", "Mirabaud", "Union Bancaire Privée (UBP)", "Trafigura", "Wood Mackenzie",
                "Aurora Energy", "Rystad Energy", "Moody's", "Bank J. Safra Sarasin",
-               "AQR Capital", "Man Group", "Vitol"):
+               "AQR Capital", "Man Group", "Vitol",
+               "Barclays", "BP", "Gunvor", "Visa", "Schroders"):
         return "Private sector"
     # Title-based fallback
     t = it["title"].lower()
@@ -1552,7 +1558,7 @@ YAML_NAME = {
     "UNU": "United Nations University", "CMCC": "CMCC (climate)",
     "Brattle": "The Brattle Group", "Moodys": "Moody's Analytics", "CGD": "CGD (DC / London)",
     "Safra": "Bank J. Safra Sarasin", "ifo": "ifo Institute (Munich)",
-    "Federal Reserve System": "Federal Reserve Board",
+    "Federal Reserve System": "Federal Reserve Board", "Barclays": "Barclays Research",
 }
 
 
