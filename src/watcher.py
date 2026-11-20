@@ -48,8 +48,9 @@ WORKDAY = [
     ("Cornerstone Research", "cornerstone.wd501.myworkdayjobs.com", "cornerstone", "CornerstoneResearch_Careers"),
     ("Lombard Odier",    "lombardodier.wd3.myworkdayjobs.com", "lombardodier", "Lombard_Odier_Careers"),
     ("WFP",              "wfp.wd3.myworkdayjobs.com",         "wfp",          "job_openings"),
+    ("Federal Reserve System", "rb.wd5.myworkdayjobs.com",    "rb",           "FRS"),  # all 12 regional Feds + Board
 ]
-SMARTRECRUITERS = [("OECD", "OECD")]
+SMARTRECRUITERS = [("OECD", "OECD"), ("Vitol", "Vitol")]
 WD_QUERIES = ["economist", "research", "economics"]
 
 # ── Oracle Recruiting Cloud (Candidate Experience) tenants: (label, host, site) ──
@@ -57,6 +58,18 @@ ORACLE_CX = [
     ("Bank of England", "eoff.fa.em1.ukg.oraclecloud.com", "CX_3001"),               # London/Leeds
     ("Bank of Thailand", "fa-exfj-saasfaprod1.fa.ocs.oraclecloud.com", "CX_1"),       # Bangkok (+ PIER)
     ("Union Bancaire Privée (UBP)", "iaadtu.fa.ocs.oraclecloud.eu", "CX_1"),          # Geneva
+    ("IRENA", "eexh.fa.em3.oraclecloud.com", "CX_1"),                                # Abu Dhabi/Bonn — energy
+]
+
+# ── Greenhouse boards (public API: boards-api.greenhouse.io/v1/boards/<token>/jobs) ──
+GREENHOUSE = [
+    ("AQR Capital", "aqr"),
+    ("Man Group", "mangroup"),
+]
+
+# ── TeamTailor career sites (public RSS at <host>/jobs.rss) ──
+TEAMTAILOR = [
+    ("Public First", "shgh.teamtailor.com"),  # London policy/econ consultancy
 ]
 
 # ── aggregator search URLs (already economics-filtered) ─────────────────────
@@ -179,6 +192,35 @@ def adapter_oracle_cx():
                    "deadline": (p.get("PostingEndDate") or "")[:10],
                    "url": f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{jid}",
                    "scan": title.lower()}
+
+
+def adapter_greenhouse():
+    # Greenhouse public board API. ROLE_RE + INTERN_EXCLUDE filter; same shape as adapter_cra/brattle.
+    for label, token in GREENHOUSE:
+        try:
+            data = json.loads(urllib_get(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true", timeout=15))
+        except Exception:
+            continue
+        for j in data.get("jobs", []):
+            title = j.get("title", "")
+            if not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+                continue
+            yield {"source": label, "org": label, "ext_id": str(j.get("id", "")), "title": title[:130],
+                   "loc": (j.get("location") or {}).get("name", ""), "deadline": "",
+                   "url": j.get("absolute_url", ""), "scan": title.lower()}
+
+
+def adapter_teamtailor():
+    # TeamTailor public RSS feed. Same parse as adapter_ecorys; location not in the feed.
+    for label, host in TEAMTAILOR:
+        h = curl_get(f"https://{host}/jobs.rss") or urllib_get(f"https://{host}/jobs.rss")
+        for m in re.finditer(r"<item>.*?<title>([^<]+)</title>.*?<link>([^<]+)</link>", h, re.S):
+            title, url = html.unescape(m.group(1)).strip(), m.group(2).strip()
+            if not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+                continue
+            jid = re.search(r"/jobs/(\d+)", url)
+            yield {"source": label, "org": label, "ext_id": jid.group(1) if jid else url,
+                   "title": title[:130], "loc": "", "deadline": "", "url": url, "scan": title.lower()}
 
 
 MAXPAGES = 8   # paginate aggregators up to this many pages; stop early when a page adds nothing new
@@ -1359,11 +1401,11 @@ def classify(it):
     # IOs / UN system — but not if org is a multilateral bank
     if _IO_UN.search(org) or src in ("ReliefWeb", "Impactpool", "UNjobs"):
         return "IO/UN"
-    if org in ("WFP", "IPCC"):
+    if org in ("WFP", "IPCC", "IRENA"):
         return "IO/UN"
     # Think tanks & research
     if org in ("J-PAL", "UNU-WIDER", "IPA", "WZB", "CREI", "UNU", "CMCC", "CGD",
-               "ifo Institute", "Bruegel"):
+               "ifo Institute", "Bruegel", "Public First"):
         return "Think tanks & research"
     if org in ("U St Gallen (SIAW)",):
         return "Academic"
@@ -1374,7 +1416,8 @@ def classify(it):
         return "Consulting"
     # Private sector
     if org in ("Lombard Odier", "Mirabaud", "Union Bancaire Privée (UBP)", "Trafigura", "Wood Mackenzie",
-               "Aurora Energy", "Rystad Energy", "Moody's", "Bank J. Safra Sarasin"):
+               "Aurora Energy", "Rystad Energy", "Moody's", "Bank J. Safra Sarasin",
+               "AQR Capital", "Man Group", "Vitol"):
         return "Private sector"
     # Title-based fallback
     t = it["title"].lower()
@@ -1509,6 +1552,7 @@ YAML_NAME = {
     "UNU": "United Nations University", "CMCC": "CMCC (climate)",
     "Brattle": "The Brattle Group", "Moodys": "Moody's Analytics", "CGD": "CGD (DC / London)",
     "Safra": "Bank J. Safra Sarasin", "ifo": "ifo Institute (Munich)",
+    "Federal Reserve System": "Federal Reserve Board",
 }
 
 
@@ -1527,6 +1571,7 @@ def tracked_feeds():
     feeds = {}
     for how, labels in [("Workday feed", [w[0] for w in WORKDAY]), ("SmartRecruiters feed", [s[0] for s in SMARTRECRUITERS]),
                         ("Oracle feed", [o[0] for o in ORACLE_CX]),
+                        ("Greenhouse feed", [g[0] for g in GREENHOUSE]), ("TeamTailor feed", [t[0] for t in TEAMTAILOR]),
                         ("aggregator", AGGREGATORS), ("careers page", PAGE_ADAPTERS + [g[0] for g in GENERIC_SITES]),
                         ("email alert", [a[0] for a in ALERT_SENDERS]), ("job board", [b[1] for b in OPEN_BOARDS])]:
         for label in labels:
@@ -1852,7 +1897,8 @@ def main():
         sys.stdout = sys.stderr = _Tee(_stdout, log)
 
     conn = db_connect()   # dry-run reads NEW flags too; only a sent email (or --init) commits
-    items = (list(adapter_workday()) + list(adapter_smartrecruiters()) + list(adapter_oracle_cx()) + list(adapter_unjobs())
+    items = (list(adapter_workday()) + list(adapter_smartrecruiters()) + list(adapter_oracle_cx())
+             + list(adapter_greenhouse()) + list(adapter_teamtailor()) + list(adapter_unjobs())
              + list(adapter_jobsacuk()) + list(adapter_inomics()) + list(adapter_euraxess())
              + list(adapter_ebrd()) + list(adapter_ceb()) + list(adapter_aiib())
              + list(adapter_adb()) + list(adapter_bstdb())

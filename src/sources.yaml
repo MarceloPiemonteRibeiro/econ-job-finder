@@ -97,7 +97,7 @@ sources:
   - {name: "WIPO", url: "https://www.wipo.int/en/web/working-at-wipo/wipo-jobs", type: html, note: "Geneva. Chief Economist office — innovation/IP econ.", status: blocked, how: "Taleo"}
   - {name: "WHO", url: "https://www.who.int/careers", type: html, note: "Geneva. Health economics. Partially covered via UNjobs.", status: blocked, how: "JS app · partial via UNjobs"}
   - {name: "UNEP", url: "https://www.unep.org/about-un-environment/careers", type: html, note: "Nairobi/Geneva. Environmental econ. Partially covered via UNjobs.", status: blocked, how: "403 · partial via UNjobs"}
-  - {name: "IRENA", url: "https://www.irena.org/About/Employment/Vacancies-and-recruitment", type: html, note: "Abu Dhabi/Bonn. Renewable energy — your energy angle.", status: blocked, how: "403"}
+  - {name: "IRENA", url: "https://eexh.fa.em3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs", type: html, note: "Abu Dhabi/Bonn. Renewable energy — your energy angle. Public site is 403, but the Oracle recruiting JSON API responds.", status: directly, how: "Oracle Recruiting API"}
   - {name: "UNU-WIDER", url: "https://www.wider.unu.edu/opportunities", type: html, note: "Helsinki. Development economics research.", status: directly, how: "dedicated"}
   - {name: "UNU-MERIT", url: "https://www.merit.unu.edu/about-us/vacancies/", type: html, note: "Maastricht. Innovation economics — your angle.", status: blocked, how: "JS app"}
   - {name: "United Nations University", url: "https://careers.unu.edu/", type: html, note: "Global. Central UNU careers portal.", status: directly, how: "dedicated adapter"}
@@ -150,7 +150,7 @@ sources:
   # ═══════════════════════════════════════════════════════════
   # CENTRAL BANKS — North America, Asia-Pacific, Middle East, Africa
   # ═══════════════════════════════════════════════════════════
-  - {name: "Federal Reserve Board", url: "https://www.federalreserve.gov/careers-economists.htm", type: html, note: "Washington DC. Heavy PhD hiring.", status: blocked, how: "Taleo"}
+  - {name: "Federal Reserve Board", url: "https://rb.wd5.myworkdayjobs.com/FRS", type: html, note: "Washington DC. Heavy PhD hiring. FRS Workday tenant also covers all 12 regional Feds — one feed, source-tagged 'Federal Reserve System'.", status: directly, how: "Workday API (FRS tenant)"}
   - {name: "FRB New York", url: "https://www.newyorkfed.org/careers", type: html, note: "All 12 regional Feds hire PhD economists.", status: blocked, how: "JS SPA"}
   - {name: "FRB Chicago", url: "https://rb.wd5.myworkdayjobs.com/FRS?hiringCompany=7186c32a743f01e4caeeb8caaf01430c", type: html, status: blocked, how: "Workday (company-filtered)"}
   - {name: "FRB San Francisco", url: "https://www.frbsf.org/our-district/careers/", type: html, status: blocked, how: "JS SPA"}
@@ -254,15 +254,15 @@ sources:
   - {name: "PIMCO", url: "https://www.pimco.com/en-us/our-firm/careers", type: html, status: blocked, how: "403"}
   - {name: "Amundi", url: "https://about.amundi.com/our-job-board", type: html, note: "Paris. Largest EU asset manager.", status: blocked, how: "JS SPA"}
   - {name: "Schroders", url: "https://www.schroders.com/en/global/individual/careers/", type: html, status: blocked, how: "JS SPA"}
-  - {name: "AQR Capital", url: "https://careers.aqr.com/", type: html, note: "Quant, hires PhDs.", status: blocked, how: "JS SPA"}
+  - {name: "AQR Capital", url: "https://careers.aqr.com/", type: html, note: "Quant, hires PhDs.", status: directly, how: "Greenhouse API"}
   - {name: "Bridgewater Associates", url: "https://www.bridgewater.com/working-at-bridgewater", type: html, note: "Macro.", status: blocked, how: "JS SPA"}
-  - {name: "Man Group", url: "https://www.man.com/careers", type: html, note: "Quant/macro.", status: blocked, how: "JS SPA"}
+  - {name: "Man Group", url: "https://www.man.com/careers", type: html, note: "Quant/macro.", status: directly, how: "Greenhouse API"}
 
   # ═══════════════════════════════════════════════════════════
   # PRIVATE SECTOR — Commodities & energy  (your energy angle)
   # ═══════════════════════════════════════════════════════════
   - {name: "Trafigura", url: "https://www.trafigura.com/careers/", type: html, note: "Geneva. Commodities economist / market analysis.", status: directly, how: "generic scraper"}
-  - {name: "Vitol", url: "https://www.vitol.com/careers/", type: html, note: "Geneva. Energy economist.", status: blocked, how: "403"}
+  - {name: "Vitol", url: "https://jobs.smartrecruiters.com/Vitol", type: html, note: "Geneva. Energy economist. SmartRecruiters public API.", status: directly, how: "SmartRecruiters API"}
   - {name: "Mercuria", url: "https://www.mercuria.com/jobs", type: html, note: "Geneva. Market analysis.", status: blocked, how: "JS SPA"}
   - {name: "Gunvor", url: "https://gunvorgroup.com/careers/", type: html, note: "Geneva. Market research.", status: blocked, how: "403"}
   - {name: "Shell (Scenarios/Economics)", url: "https://www.shell.com/careers.html", type: html, status: blocked, how: "JS SPA"}
@@ -375,7 +375,7 @@ sources:
   - {name: "Eval Lab", url: "https://eval-lab.com/", type: html, note: "Paris. [★] RCT evaluation.", status: blocked, how: "Tiny, no careers page"}
   - {name: "Ecorys", url: "https://careers.ecorys.com/en", type: html, note: "NL/Belgium. Environmental research consultancy.", status: directly, how: "RSS feed · TeamTailor RSS"}
   - {name: "European Climate Foundation", url: "https://europeanclimatefoundation.occupop-careers.com/", type: html, note: "Brussels. Environment. Occupop JS SPA.", status: blocked, how: "Occupop JS SPA"}
-  - {name: "Public First", url: "https://shgh.teamtailor.com/jobs", type: html, note: "London. Policy/economics. TeamTailor JS SPA.", status: blocked, how: "TeamTailor JS SPA"}
+  - {name: "Public First", url: "https://shgh.teamtailor.com/jobs", type: html, note: "London. Policy/economics. TeamTailor public RSS feed.", status: directly, how: "TeamTailor RSS"}
   - {name: "VITO", url: "https://jobs.vito.be/", type: manual, note: "Belgium. Environmental research. EXCLUDED — not relevant per Marcelo.", status: ignored, how: "Excluded — not relevant"}
 
   # ═══════════════════════════════════════════════════════════
