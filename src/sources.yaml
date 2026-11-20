@@ -151,10 +151,10 @@ sources:
   # CENTRAL BANKS — North America, Asia-Pacific, Middle East, Africa
   # ═══════════════════════════════════════════════════════════
   - {name: "Federal Reserve Board", url: "https://rb.wd5.myworkdayjobs.com/FRS", type: html, note: "Washington DC. Heavy PhD hiring. FRS Workday tenant also covers all 12 regional Feds — one feed, source-tagged 'Federal Reserve System'.", status: directly, how: "Workday API (FRS tenant)"}
-  - {name: "FRB New York", url: "https://www.newyorkfed.org/careers", type: html, note: "All 12 regional Feds hire PhD economists.", status: blocked, how: "JS SPA"}
-  - {name: "FRB Chicago", url: "https://rb.wd5.myworkdayjobs.com/FRS?hiringCompany=7186c32a743f01e4caeeb8caaf01430c", type: html, status: blocked, how: "Workday (company-filtered)"}
-  - {name: "FRB San Francisco", url: "https://www.frbsf.org/our-district/careers/", type: html, status: blocked, how: "JS SPA"}
-  - {name: "FRB Minneapolis", url: "https://www.minneapolisfed.org/about-us/careers", type: html, status: blocked, how: "JS SPA"}
+  - {name: "FRB New York", url: "https://www.newyorkfed.org/careers", type: html, note: "Covered by the shared FRS Workday feed — roles appear under 'Federal Reserve System'. No separate alert needed.", status: directly, how: "Covered via FRS Workday feed"}
+  - {name: "FRB Chicago", url: "https://rb.wd5.myworkdayjobs.com/FRS?hiringCompany=7186c32a743f01e4caeeb8caaf01430c", type: html, note: "Covered by the shared FRS Workday feed — roles appear under 'Federal Reserve System'. No separate alert needed.", status: directly, how: "Covered via FRS Workday feed"}
+  - {name: "FRB San Francisco", url: "https://www.frbsf.org/our-district/careers/", type: html, note: "Covered by the shared FRS Workday feed — roles appear under 'Federal Reserve System'. No separate alert needed.", status: directly, how: "Covered via FRS Workday feed"}
+  - {name: "FRB Minneapolis", url: "https://www.minneapolisfed.org/about-us/careers", type: html, note: "Covered by the shared FRS Workday feed — roles appear under 'Federal Reserve System'. No separate alert needed.", status: directly, how: "Covered via FRS Workday feed"}
   - {name: "FRB Boston / Richmond / Atlanta / St. Louis / Dallas / Cleveland / KC / Philadelphia", url: "https://www.federalreserve.gov/aboutthefed/federal-reserve-system.htm", type: manual, note: "Reach each regional Fed's careers page from here.", status: ignored, how: "Manual reference page"}
   - {name: "Bank of Canada", url: "https://www.bankofcanada.ca/careers/", type: html, note: "Bilingual EN/FR. Active research.", status: blocked, how: "JS SPA"}
   - {name: "Reserve Bank of Australia (RBA)", url: "https://www.rba.gov.au/careers/", type: html, status: blocked, how: "403"}
