@@ -54,8 +54,9 @@ WD_QUERIES = ["economist", "research", "economics"]
 
 # ── Oracle Recruiting Cloud (Candidate Experience) tenants: (label, host, site) ──
 ORACLE_CX = [
-    ("Bank of England", "eoff.fa.em1.ukg.oraclecloud.com", "CX_3001"),  # London/Leeds
-    # ponytail: Bank of Thailand (CX_1) and UBP also run Oracle CX — add host+site here if wanted.
+    ("Bank of England", "eoff.fa.em1.ukg.oraclecloud.com", "CX_3001"),               # London/Leeds
+    ("Bank of Thailand", "fa-exfj-saasfaprod1.fa.ocs.oraclecloud.com", "CX_1"),       # Bangkok (+ PIER)
+    ("Union Bancaire Privée (UBP)", "iaadtu.fa.ocs.oraclecloud.eu", "CX_1"),          # Geneva
 ]
 
 # ── aggregator search URLs (already economics-filtered) ─────────────────────
@@ -1316,7 +1317,7 @@ def cleanup_alert_inbox():
 # ── per-job classification into a category ──────────────────────────────────
 _CENTRAL_BANKS = re.compile(
     r"federal reserve|reserve bank|central bank|banque de france|banque centrale|bundesbank"
-    r"|riksbank|norges bank|bank of finland|banco de espa[nñ]a|bank of england|bank of japan"
+    r"|riksbank|norges bank|bank of finland|banco de espa[nñ]a|bank of england|bank of japan|bank of thailand"
     r"|bank of canada|bank of korea|swiss national bank|national bank of belgium|nbb|hkma"
     r"|monetary authority|Danmarks Nationalbank|Danmarks NB|banco central|banca d.italia"
     r"|de nederlandsche bank|oesterreichische nationalbank|bank of israel|bank of greece"
@@ -1372,7 +1373,7 @@ def classify(it):
                "E.CA Economics", "Copenhagen Economics", "NERA", "CRA", "Brattle"):
         return "Consulting"
     # Private sector
-    if org in ("Lombard Odier", "Mirabaud", "Trafigura", "Wood Mackenzie",
+    if org in ("Lombard Odier", "Mirabaud", "Union Bancaire Privée (UBP)", "Trafigura", "Wood Mackenzie",
                "Aurora Energy", "Rystad Energy", "Moody's", "Bank J. Safra Sarasin"):
         return "Private sector"
     # Title-based fallback

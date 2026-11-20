@@ -165,7 +165,7 @@ sources:
   - {name: "Hong Kong Monetary Authority", url: "https://www.hkma.gov.hk/eng/about-us/join-us/current-vacancies/", type: html, note: "+ HKIMR research.", status: directly, how: "dedicated"}
   - {name: "Reserve Bank of India", url: "https://opportunities.rbi.org.in/", type: html, note: "DEPR research.", status: blocked, how: "JS portal"}
   - {name: "Bank Negara Malaysia", url: "https://www.bnm.gov.my/careers", type: html, status: blocked, how: "JS SPA"}
-  - {name: "Bank of Thailand", url: "https://fa-exfj-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/th/sites/CX_1/jobs", type: html, note: "Bangkok. + PIER research institute. Oracle recruiting portal.", status: blocked, how: "Oracle Cloud"}
+  - {name: "Bank of Thailand", url: "https://fa-exfj-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/th/sites/CX_1/jobs", type: html, note: "Bangkok. + PIER research institute. Oracle recruiting JSON API responds.", status: directly, how: "Oracle Recruiting API"}
   - {name: "Central Bank of Israel", url: "https://www.boi.org.il/en/", type: html, note: "Research dept recruits PhDs internationally.", status: blocked, how: "Hebrew portal"}
   - {name: "South African Reserve Bank (SARB)", url: "https://www.resbank.co.za/en/home/about-us/Careers", type: html, status: blocked, how: "JS SPA"}
   - {name: "Saudi Central Bank (SAMA)", url: "https://www.sama.gov.sa/en-US/Careers/", type: html, status: blocked, how: "JS SPA"}
@@ -225,7 +225,7 @@ sources:
   - {name: "Pictet (Research Institute)", url: "https://www.pictet.com/ch/en/careers", type: html, note: "Geneva. [~] Boss-led, light research per your note — network.", status: alert, how: "your alert"}
   - {name: "UBS (CIO / Global Research)", url: "https://www.ubs.com/global/en/careers.html", type: html, note: "Geneva/Zurich. Chief Investment Office; Global Research.", status: blocked, how: "403"}
   - {name: "Lombard Odier", url: "https://www.lombardodier.com/home/careers.html", type: html, note: "Geneva. CIO / Macro Research.", status: directly, how: "Workday"}
-  - {name: "Union Bancaire Privée (UBP)", url: "https://iaadtu.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/jobs?mode=location", type: html, note: "Geneva. Group Economics & Research.", status: blocked, how: "Oracle Cloud portal"}
+  - {name: "Union Bancaire Privée (UBP)", url: "https://iaadtu.fa.ocs.oraclecloud.eu/hcmUI/CandidateExperience/en/sites/CX_1/jobs?mode=location", type: html, note: "Geneva. Group Economics & Research. Oracle recruiting JSON API responds.", status: directly, how: "Oracle Recruiting API"}
   - {name: "Mirabaud", url: "https://www.mirabaud.com/en/careers/", type: html, note: "Geneva. Economic Research; Strategy.", status: directly, how: "generic scraper"}
   - {name: "Julius Baer", url: "https://www.juliusbaer.com/en/careers/", type: html, note: "Zurich. Research/CIO.", status: alert, how: "your alert"}
   - {name: "Vontobel", url: "https://www.vontobel.com/en-ch/about-vontobel/careers/open-positions/?search=Economist", type: html, note: "Zurich. Research.", status: blocked, how: "JS SPA (search is JS-rendered)"}
