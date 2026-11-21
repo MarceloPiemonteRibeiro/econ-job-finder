@@ -71,15 +71,15 @@ sources:
   - {name: "IMF", url: "https://www.imf.org/en/About/Recruitment", type: html, note: "EP Program + research.", status: directly, how: "Workday"}
   - {name: "EBRD", url: "https://www.ebrd.com/careers-at-the-ebrd.html", type: html, note: "London. Strong econ research.", status: directly, how: "SAP SuccessFactors"}
   - {name: "EIB (European Investment Bank)", url: "https://erecruitment.eib.org/psc/hr/EIBJOBS/CAREERS/c/HRS_HRAM_FL.HRS_CG_SEARCH_FL.GBL?Page=HRS_APP_SCHJOB_FL&focus=Applicant", type: html, note: "Luxembourg. e-recruitment portal.", status: alert, how: "your alert"}
-  - {name: "EIF (European Investment Fund)", url: "https://www.eif.org/work-with-us/careers", type: html, note: "Luxembourg.", status: blocked, how: "PeopleSoft portal"}
-  - {name: "ESM (European Stability Mechanism)", url: "https://www.esm.europa.eu/careers", type: html, note: "Luxembourg. Sovereign/macro research.", status: blocked, how: "JS app"}
+  - {name: "EIF (European Investment Fund)", url: "https://www.eif.org/work-with-us/careers", type: html, note: "Luxembourg. Email alert subscribed.", status: alert, how: "email alert"}
+  - {name: "ESM (European Stability Mechanism)", url: "https://www.esm.europa.eu/careers/vacancies", type: html, note: "Luxembourg. Sovereign/macro research. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "CEB (Council of Europe Dev Bank)", url: "https://coebank.org/en/job-section/", type: html, note: "Paris.", status: directly, how: "SAP SuccessFactors"}
   - {name: "IDB / BID (Inter-American Dev Bank)", url: "https://www.iadb.org/en/careers", type: html, note: "Washington DC. Strong research dept.", status: alert, how: "IMAP (jobs2web) · Email alert active"}
   - {name: "IDB Invest", url: "https://www.idbinvest.org/en/careers", type: html, status: alert, how: "your alert"}
   - {name: "CAF (Dev Bank of Latin America)", url: "https://www.caf.com/en/about-caf/talent/", type: html, note: "Caracas/regional. ES advantage.", status: blocked, how: "JS app"}
   - {name: "ADB (Asian Development Bank)", url: "https://www.adb.org/careers", type: html, note: "Manila. ADBI research inst in Tokyo.", status: directly, how: "dedicated (urllib) · Bypasses Cloudflare"}
   - {name: "AIIB", url: "https://www.aiib.org/en/opportunities/career/job-vacancies/index.html", type: html, note: "Beijing. (= your 'AIB', confirmed.)", status: directly, how: "dedicated · JSON + HTML"}
-  - {name: "AfDB (African Development Bank)", url: "https://www.afdb.org/en/about-us/careers", type: html, note: "Abidjan. FR advantage.", status: blocked, how: "JS app"}
+  - {name: "AfDB (African Development Bank)", url: "https://www.afdb.org/en/about-careers/current-vacancies", type: html, note: "Abidjan. FR advantage. Scraped from /en/vacancy/ links (follow redirects).", status: directly, how: "careers page"}
   - {name: "IsDB (Islamic Development Bank)", url: "https://careers.isdb.org/", type: html, note: "Jeddah.", status: alert, how: "your alert"}
   - {name: "NDB (New Development Bank / BRICS)", url: "https://www.ndb.int/careers/", type: html, note: "Shanghai.", status: alert, how: "your alert"}
   - {name: "NIB (Nordic Investment Bank)", url: "https://www.nib.int/careers/", type: html, note: "Helsinki.", status: alert, how: "your alert"}
@@ -112,17 +112,17 @@ sources:
   # CENTRAL BANKS — Switzerland & core Europe  (top location tiers)
   # ═══════════════════════════════════════════════════════════
   - {name: "SNB (Switzerland)", url: "https://careers.snb.ch/search/?locale=en_US", type: html, note: "TOP location. German often required — check per posting. [verified]", status: blocked, how: "SuccessFactors JS"}
-  - {name: "ECB", url: "https://www.ecb.europa.eu/careers/what-we-offer/vacancies/html/index.en.html", type: html, note: "Frankfurt. Some tracks need EU citizenship.", status: blocked, how: "SSL error"}
+  - {name: "ECB", url: "https://www.ecb.europa.eu/careers/what-we-offer/vacancies/html/index.en.html", type: html, note: "Frankfurt. Some tracks need EU citizenship. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "BIS", url: "https://www.bis.org/careers/index.htm", type: html, note: "Basel (CH!). Monetary & Economic Dept research.", status: directly, how: "dedicated · Card scrape"}
-  - {name: "Deutsche Bundesbank", url: "https://www.bundesbank.de/en/bundesbank/career", type: html, note: "German often required.", status: blocked, how: "German portal"}
+  - {name: "Deutsche Bundesbank", url: "https://www.bundesbank.de/en/bundesbank/career", type: html, note: "German often required. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "Banque de France", url: "https://www.recrutement.banque-france.fr/consulter-nos-offres/", type: html, note: "FR advantage. English research roles exist.", status: directly, how: "Workday"}
   - {name: "Banca d'Italia", url: "https://www.bancaditalia.it/chi-siamo/lavora-con-noi/", type: html, note: "Strong research; annual econ competition.", status: blocked, how: "Italian concorso portal"}
   - {name: "Banco de España", url: "https://www.bde.es/wbe/en/sobre-banco/trabajar-banco/", type: html, note: "Strong DG Economics research.", status: directly, how: "generic scraper"}
-  - {name: "De Nederlandsche Bank (DNB)", url: "https://www.dnb.nl/en/careers-at-dnb/", type: html, status: blocked, how: "JS SPA"}
+  - {name: "De Nederlandsche Bank (DNB)", url: "https://www.dnb.nl/en/careers-at-dnb/", type: html, note: "Amsterdam. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "National Bank of Belgium", url: "https://jobs.nbb.be/en", type: html, note: "Brussels. FR/NL context.", status: directly, how: "generic scraper"}
   - {name: "Oesterreichische Nationalbank (OeNB)", url: "https://www.oenb.at/karriere/karriere-in-der-oenb.html", type: html, note: "Vienna.", status: blocked, how: "German portal"}
-  - {name: "Central Bank of Ireland", url: "https://www.centralbank.ie/careers", type: html, note: "Dublin. English, active research.", status: blocked, how: "JS SPA"}
-  - {name: "Banco de Portugal", url: "https://www.bportugal.pt/en/page/careers", type: html, note: "PT native = advantage. Strong research.", status: blocked, how: "JS SPA"}
+  - {name: "Central Bank of Ireland", url: "https://www.centralbank.ie/careers", type: html, note: "Dublin. English, active research. Email alert subscribed.", status: alert, how: "email alert"}
+  - {name: "Banco de Portugal", url: "https://www.bportugal.pt/en/page/careers", type: html, note: "PT native = advantage. Strong research. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "Bank of Finland", url: "https://www.suomenpankki.fi/en/bank-of-finland/bank-of-finland-as-an-employer/job-opportunities/", type: html, note: "Helsinki. + BOFIT (transition economies).", status: directly, how: "dedicated · rekrytointi.com"}
   - {name: "Danmarks Nationalbank", url: "https://www.nationalbanken.dk/en/careers", type: html, status: directly, how: "Workday"}
   - {name: "Sveriges Riksbank", url: "https://www.riksbank.se/en-gb/about-the-riksbank/come-work-with-us/available-vacancies/", type: html, note: "Very research-active, recruits internationally.", status: blocked, how: "JS SPA"}
@@ -132,15 +132,15 @@ sources:
   # ═══════════════════════════════════════════════════════════
   # CENTRAL BANKS — rest of Europe
   # ═══════════════════════════════════════════════════════════
-  - {name: "Bank of Lithuania", url: "https://www.lb.lt/en/careers", type: html, note: "Very research-active, recruits internationally in English.", status: blocked, how: "JS SPA"}
+  - {name: "Bank of Lithuania", url: "https://www.lb.lt/en/careers", type: html, note: "Very research-active, recruits internationally in English. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "Eesti Pank (Estonia)", url: "https://www.eestipank.ee/en/eesti-pank/careers", type: html, status: blocked, how: "Rare openings"}
-  - {name: "Latvijas Banka", url: "https://karjera.bank.lv/en", type: html, status: blocked, how: "JS SPA"}
+  - {name: "Latvijas Banka", url: "https://karjera.bank.lv/en", type: html, note: "Riga. TeamTailor. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "Czech National Bank", url: "https://www.cnb.cz/DC3VyberovaRizeni/", type: html, note: "Active research. Selection procedures page (Czech).", status: blocked, how: "Czech portal"}
   - {name: "Narodowy Bank Polski (NBP)", url: "https://nbp.pl/en/about-us/", type: html, status: blocked, how: "Polish portal"}
   - {name: "Magyar Nemzeti Bank (Hungary)", url: "https://toborzas.mnb.hu/allasok", type: html, status: blocked, how: "Hungarian portal"}
   - {name: "National Bank of Slovakia", url: "https://kariera.nbs.sk/", type: html, status: blocked, how: "Slovak portal"}
   - {name: "Bank of Greece", url: "https://www.bankofgreece.gr/en/the-bank/job-opportunities", type: html, status: blocked, how: "Rare English openings"}
-  - {name: "Central Bank of Luxembourg (BCL)", url: "https://www.bcl.lu/en/jobs/", type: html, status: blocked, how: "Small portal"}
+  - {name: "Central Bank of Luxembourg (BCL)", url: "https://www.bcl.lu/en/jobs/", type: html, note: "LinkedIn alert — check in Gmail/LinkedIn; not auto-parsed (bundled multi-employer).", status: alert, how: "LinkedIn alert (manual)"}
   - {name: "Central Bank of Cyprus", url: "https://www.centralbank.cy/en/the-bank/vacancies", type: html, status: blocked, how: "Small portal"}
   - {name: "Bank of Slovenia", url: "https://www.bsi.si/en/careers-at-banka-slovenije", type: html, status: blocked, how: "Rare openings"}
   - {name: "Croatian National Bank (HNB)", url: "https://www.hnb.hr/en/about-us/career/employment", type: html, status: blocked, how: "Rare openings"}
@@ -349,7 +349,7 @@ sources:
   - {name: "Swiss Finance Institute", url: "https://www.sfi.ch/en", type: html, note: "Finance research network across CH. [check manually: roles via 7 partner universities & LinkedIn]", status: ignored, how: "Roles via partner unis + LinkedIn"}
   - {name: "Study Center Gerzensee", url: "https://www.szgerzensee.ch/", type: html, note: "SNB foundation; research + doctoral courses.", status: blocked, how: "No careers page"}
   - {name: "Wyss Academy for Nature", url: "https://www.wyssacademy.org/en/about-us/careers", type: html, note: "Bern. [★] Environment.", status: blocked, how: "No job listings on page"}
-  - {name: "Avenir Suisse", url: "https://www.avenir-suisse.ch/offene-stellen/", type: html, note: "Zurich/Lausanne. [~] Policy think tank. Also FR: /fr/postes-vacants/", status: blocked, how: "WordPress JS-rendered"}
+  - {name: "Avenir Suisse", url: "https://www.avenir-suisse.ch/en/open-positions", type: html, note: "Zurich/Lausanne. [~] Policy think tank. Roles are on-page sections.", status: directly, how: "careers page"}
   - {name: "economiesuisse", url: "https://www.economiesuisse.ch/en/career", type: html, note: "Geneva/Zurich. [★] Business federation, econ policy.", status: blocked, how: "JS SPA"}
 
   # ═══════════════════════════════════════════════════════════

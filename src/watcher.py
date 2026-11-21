@@ -228,6 +228,48 @@ def adapter_teamtailor():
                    "title": title[:130], "loc": "", "deadline": "", "url": url, "scan": title.lower()}
 
 
+def adapter_afdb():
+    # AfDB: clean /en/vacancy/{slug}-{id} links; the page 301-redirects, so follow with curl -L.
+    try:
+        r = subprocess.run(["curl", "-sL", "-A", UA, "--max-time", "20",
+                            "https://www.afdb.org/en/about-careers/current-vacancies"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=26)
+        h = r.stdout or ""
+    except Exception:
+        return
+    seen = set()
+    for m in re.finditer(r'href="(/en/vacancy/[^"]+?-(\d+))"[^>]*>([^<]{6,})<', h):
+        href, jid, title = m.group(1), m.group(2), html.unescape(m.group(3)).strip()
+        if jid in seen:
+            continue
+        seen.add(jid)
+        if not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+            continue
+        yield {"source": "AfDB", "org": "AfDB", "ext_id": jid, "title": title[:130],
+               "loc": "Abidjan", "deadline": "", "url": "https://www.afdb.org" + href, "scan": title.lower()}
+
+
+def adapter_avenir():
+    # Avenir Suisse: roles are on-page sections (<a href="#stellenbeschreibungN">Title</a>);
+    # the anchor index rotates, so key on a title slug instead.
+    url = "https://www.avenir-suisse.ch/en/open-positions"
+    h = curl_get(url) or urllib_get(url)
+    seen = set()
+    for m in re.finditer(r'href="(#stellenbeschreibung\d+)"[^>]*>(.*?)</a>', h, re.S):
+        anc = m.group(1)
+        title = html.unescape(re.sub(r"<[^>]+>", " ", m.group(2))).strip()
+        if not title:
+            continue
+        slug = re.sub(r"[^a-z0-9]+", "-", title.lower())[:50]
+        if slug in seen:
+            continue
+        seen.add(slug)
+        if not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+            continue
+        yield {"source": "Avenir Suisse", "org": "Avenir Suisse", "ext_id": slug, "title": title[:130],
+               "loc": "Zurich/Lausanne", "deadline": "", "url": url + anc, "scan": title.lower()}
+
+
 MAXPAGES = 8   # paginate aggregators up to this many pages; stop early when a page adds nothing new
 
 
@@ -1051,6 +1093,12 @@ _MORE_ALERTS = [   # patterns tested against Gmail IMAP FROM: use full email or 
     ("EU Careers", "eu-careers"), ("EU Careers 2", "epso"),
     ("80,000 Hours", "80000hours"), ("Idealist", "idealist"),
     ("Bern", "unibe.ch"), ("HSLU", "hslu"),
+    # Subscribed 2026-11 (Marcelo). Best-guess from-patterns (org domain); forward one sample
+    # alert email per source and I'll tighten these to the real sender header.
+    ("ECB", "ecb.europa.eu"), ("Deutsche Bundesbank", "bundesbank.de"), ("De Nederlandsche Bank", "dnb.nl"),
+    ("Central Bank of Ireland", "centralbank.ie"), ("Banco de Portugal", "bportugal.pt"),
+    ("Bank of Lithuania", "lb.lt"), ("Latvijas Banka", "bank.lv"),
+    ("EIF", "eif.org"), ("ESM", "esm.europa.eu"),
 ]
 for _label, _pat in _MORE_ALERTS:
     ALERT_SENDERS.append((_label, _pat, _GENERIC_ANCHOR, True))
@@ -1374,7 +1422,7 @@ _MULTILATERAL_BANKS = {"EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "IDB", "NDB
 _MULTILATERAL_RX = re.compile(
     r"\bEBRD\b|\bCEB\b|\bAIIB\b|\bADB\b|Asian Development Bank|\bBSTDB\b|\bBIS\b"
     r"|\bIDB\b|Inter-American Development Bank|\bNDB\b|New Development Bank"
-    r"|World Bank|\bIMF\b|International Monetary Fund|\bOECD\b", re.I)
+    r"|World Bank|\bIMF\b|International Monetary Fund|\bOECD\b|\bAfDB\b|African Development Bank", re.I)
 
 _IO_UN = re.compile(
     r"UNjobs|united nations|^UN\b|UNICEF|UNDP|UNIDO|UNESCO|UNCTAD|UNHCR|WFP|FAO|WHO|ILO"
@@ -1410,7 +1458,7 @@ def classify(it):
         return "IO/UN"
     # Think tanks & research
     if org in ("J-PAL", "UNU-WIDER", "IPA", "WZB", "CREI", "UNU", "CMCC", "CGD",
-               "ifo Institute", "Bruegel", "Public First"):
+               "ifo Institute", "Bruegel", "Public First", "Avenir Suisse"):
         return "Think tanks & research"
     if org in ("U St Gallen (SIAW)",):
         return "Academic"
@@ -1543,7 +1591,7 @@ def parse_sources():
 AGGREGATORS = ["UNjobs", "jobs.ac.uk", "Inomics", "Euraxess", "Impactpool", "ReliefWeb", "CAGI", "Economist Jobs"]
 PAGE_ADAPTERS = ["EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "HKMA", "J-PAL", "UNU-WIDER", "Bank of Finland",
                  "CEPAL", "WZB", "Ecorys", "CRA", "CREI", "SIAW", "WTO", "UNU", "CMCC",
-                 "Brattle", "Moodys", "CGD", "Safra", "ifo"]
+                 "Brattle", "Moodys", "CGD", "Safra", "ifo", "AfDB", "Avenir Suisse"]
 # adapter label → sources.yaml name, only where they differ after dropping "(…)" and accents.
 # ponytail: a new adapter whose label matches no entry shows up under "Other tracked feeds" — add it here.
 YAML_NAME = {
@@ -1917,6 +1965,7 @@ def main():
              + list(adapter_brattle()) + list(adapter_moodys())
              + list(adapter_cgd()) + list(adapter_safra()) + list(adapter_ifo())
              + list(adapter_wto_page()) + list(adapter_economist()) + list(adapter_generic())
+             + list(adapter_afdb()) + list(adapter_avenir())
              + list(adapter_impactpool()) + list(adapter_reliefweb())
              + list(adapter_cagi()) + list(adapter_imap())
              + list(adapter_open_boards())
