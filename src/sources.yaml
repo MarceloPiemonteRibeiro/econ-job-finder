@@ -137,7 +137,7 @@ sources:
   - {name: "Latvijas Banka", url: "https://karjera.bank.lv/en", type: html, note: "Riga. TeamTailor. Email alert subscribed.", status: alert, how: "email alert"}
   - {name: "Czech National Bank", url: "https://www.cnb.cz/DC3VyberovaRizeni/", type: html, note: "Active research. Selection procedures page (Czech).", status: blocked, how: "Czech portal"}
   - {name: "Narodowy Bank Polski (NBP)", url: "https://nbp.pl/en/about-us/", type: html, status: blocked, how: "Polish portal"}
-  - {name: "Magyar Nemzeti Bank (Hungary)", url: "https://toborzas.mnb.hu/allasok", type: html, status: blocked, how: "Hungarian portal"}
+  - {name: "Magyar Nemzeti Bank (Hungary)", url: "https://toborzas.mnb.hu/allasok", type: html, note: "Budapest. Hungarian titles matched via native econ terms in ROLE_RE.", status: directly, how: "careers page"}
   - {name: "National Bank of Slovakia", url: "https://kariera.nbs.sk/", type: html, status: blocked, how: "Slovak portal"}
   - {name: "Bank of Greece", url: "https://www.bankofgreece.gr/en/the-bank/job-opportunities", type: html, status: blocked, how: "Rare English openings"}
   - {name: "Central Bank of Luxembourg (BCL)", url: "https://www.bcl.lu/en/jobs/", type: html, note: "LinkedIn alert — check in Gmail/LinkedIn; not auto-parsed (bundled multi-employer).", status: alert, how: "LinkedIn alert (manual)"}

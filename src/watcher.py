@@ -33,7 +33,16 @@ CTX   = ssl.create_default_context()
 
 GERMAN_REQ = re.compile(r"german\s+(language\s+)?(is\s+)?(required|mandatory|essential)"
                         r"|fluent\s+in\s+german|verhandlungssicher|deutsch\s+(ist\s+)?(erforderlich|zwingend|voraussetzung)", re.I)
-ROLE_RE = re.compile(r"econom|research|policy analyst|policy officer|fellow|quantitative|statistic|lecturer|professor|post-?doc|economist", re.I)
+# English terms + native econ/research terms for non-English career portals (DE/FR/ES/PT/IT/HU),
+# so foreign-language titles are matched without a translation service. ponytail: translate the
+# filter once, not every title daily.
+ROLE_RE = re.compile(
+    r"econom|économ|research|recherche|ricerca|investigaci|investigador|"          # EN/FR/IT/ES/PT econ+research
+    r"közgazdász|kutató|elemző|modellez|"                                          # HU: economist/researcher/analyst/modeller
+    r"ökonom|volkswirt|wirtschaftswissenschaft|"                                   # DE: economist / economics science
+    r"économiste|chercheur|"                                                       # FR
+    r"policy analyst|policy officer|fellow|quantitative|statistic|estadístic|"
+    r"lecturer|professor|post-?doc|economist", re.I)
 # Roles to drop: too senior (assoc/full prof), too junior (PhD/doctoral student), or internships
 ACAD_EXCLUDE = re.compile(r"associate professor|full professor|\bph\.?d\b|\bdoctoral\b|pre-?doctoral|predoctoral", re.I)
 INTERN_EXCLUDE = re.compile(r"\binterns?\b|\biterns?\b|\binternships?\b|\broster\b|\btalent\s*pool\b", re.I)
@@ -268,6 +277,23 @@ def adapter_avenir():
             continue
         yield {"source": "Avenir Suisse", "org": "Avenir Suisse", "ext_id": slug, "title": title[:130],
                "loc": "Zurich/Lausanne", "deadline": "", "url": url + anc, "scan": title.lower()}
+
+
+def adapter_mnb():
+    # Magyar Nemzeti Bank (Hungary): /allas/{slug}-{id} links. Titles are Hungarian, caught by the
+    # native terms in ROLE_RE (közgazdász, kutató, elemző, modellez).
+    h = curl_get("https://toborzas.mnb.hu/allasok") or urllib_get("https://toborzas.mnb.hu/allasok")
+    seen = set()
+    for m in re.finditer(r'href="(/allas/[^"]+?-(\d+))"[^>]*>(.*?)</a>', h, re.S):
+        href, jid = m.group(1), m.group(2)
+        title = html.unescape(re.sub(r"<[^>]+>", " ", m.group(3))).strip()
+        if not title or jid in seen:
+            continue
+        seen.add(jid)
+        if not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+            continue
+        yield {"source": "MNB (Hungary)", "org": "MNB (Hungary)", "ext_id": jid, "title": title[:130],
+               "loc": "Budapest", "deadline": "", "url": "https://toborzas.mnb.hu" + href, "scan": title.lower()}
 
 
 MAXPAGES = 8   # paginate aggregators up to this many pages; stop early when a page adds nothing new
@@ -1416,7 +1442,7 @@ _CENTRAL_BANKS = re.compile(
     r"|bank of canada|bank of korea|swiss national bank|national bank of belgium|nbb|hkma"
     r"|monetary authority|Danmarks Nationalbank|Danmarks NB|banco central|banca d.italia"
     r"|de nederlandsche bank|oesterreichische nationalbank|bank of israel|bank of greece"
-    r"|central bank of turkey|türkiye cumhuriyet merkez bankası", re.I)
+    r"|central bank of turkey|türkiye cumhuriyet merkez bankası|magyar nemzeti bank|\bMNB\b", re.I)
 
 _MULTILATERAL_BANKS = {"EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "IDB", "NDB", "World Bank", "IMF", "OECD"}
 _MULTILATERAL_RX = re.compile(
@@ -1591,7 +1617,7 @@ def parse_sources():
 AGGREGATORS = ["UNjobs", "jobs.ac.uk", "Inomics", "Euraxess", "Impactpool", "ReliefWeb", "CAGI", "Economist Jobs"]
 PAGE_ADAPTERS = ["EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "HKMA", "J-PAL", "UNU-WIDER", "Bank of Finland",
                  "CEPAL", "WZB", "Ecorys", "CRA", "CREI", "SIAW", "WTO", "UNU", "CMCC",
-                 "Brattle", "Moodys", "CGD", "Safra", "ifo", "AfDB", "Avenir Suisse"]
+                 "Brattle", "Moodys", "CGD", "Safra", "ifo", "AfDB", "Avenir Suisse", "MNB (Hungary)"]
 # adapter label → sources.yaml name, only where they differ after dropping "(…)" and accents.
 # ponytail: a new adapter whose label matches no entry shows up under "Other tracked feeds" — add it here.
 YAML_NAME = {
@@ -1607,6 +1633,7 @@ YAML_NAME = {
     "Brattle": "The Brattle Group", "Moodys": "Moody's Analytics", "CGD": "CGD (DC / London)",
     "Safra": "Bank J. Safra Sarasin", "ifo": "ifo Institute (Munich)",
     "Federal Reserve System": "Federal Reserve Board", "Barclays": "Barclays Research",
+    "MNB (Hungary)": "Magyar Nemzeti Bank (Hungary)",
 }
 
 
@@ -1965,7 +1992,7 @@ def main():
              + list(adapter_brattle()) + list(adapter_moodys())
              + list(adapter_cgd()) + list(adapter_safra()) + list(adapter_ifo())
              + list(adapter_wto_page()) + list(adapter_economist()) + list(adapter_generic())
-             + list(adapter_afdb()) + list(adapter_avenir())
+             + list(adapter_afdb()) + list(adapter_avenir()) + list(adapter_mnb())
              + list(adapter_impactpool()) + list(adapter_reliefweb())
              + list(adapter_cagi()) + list(adapter_imap())
              + list(adapter_open_boards())
