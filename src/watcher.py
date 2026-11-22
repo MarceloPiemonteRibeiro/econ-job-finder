@@ -296,6 +296,36 @@ def adapter_mnb():
                "loc": "Budapest", "deadline": "", "url": "https://toborzas.mnb.hu" + href, "scan": title.lower()}
 
 
+# ── generic RSS/Atom job feeds: (label, feed_url, location). Drop new feeds here. ──
+RSS_FEEDS = [
+    ("FAO", "https://jobs.fao.org/careersection/feed/joblist.rss?lang=en&portal=8105120163&searchtype=3"
+            "&f=LOCATION(13605120163)|JOB_FIELD(2605120163)&s=1|D&a=null&multiline=false", "Rome"),
+]
+
+
+def adapter_rss():
+    for label, feed, loc in RSS_FEEDS:
+        try:
+            r = subprocess.run(["curl", "-sL", "-A", UA, "--max-time", "25", feed],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=31)
+            h = r.stdout or ""
+        except Exception:
+            continue
+        for m in re.finditer(r"<item>(.*?)</item>", h, re.S):
+            block = m.group(1)
+            tm = re.search(r"<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</title>", block, re.S)
+            lm = re.search(r"<link>(.*?)</link>", block, re.S)
+            if not (tm and lm):
+                continue
+            title = html.unescape(re.sub(r"<[^>]+>", "", tm.group(1))).strip()
+            url = html.unescape(lm.group(1)).strip()
+            if not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+                continue
+            jid = re.search(r"job=(\d+)", url)
+            yield {"source": label, "org": label, "ext_id": jid.group(1) if jid else url,
+                   "title": title[:130], "loc": loc, "deadline": "", "url": url, "scan": title.lower()}
+
+
 MAXPAGES = 8   # paginate aggregators up to this many pages; stop early when a page adds nothing new
 
 
@@ -1653,6 +1683,7 @@ def tracked_feeds():
     for how, labels in [("Workday feed", [w[0] for w in WORKDAY]), ("SmartRecruiters feed", [s[0] for s in SMARTRECRUITERS]),
                         ("Oracle feed", [o[0] for o in ORACLE_CX]),
                         ("Greenhouse feed", [g[0] for g in GREENHOUSE]), ("TeamTailor feed", [t[0] for t in TEAMTAILOR]),
+                        ("RSS feed", [r[0] for r in RSS_FEEDS]),
                         ("aggregator", AGGREGATORS), ("careers page", PAGE_ADAPTERS + [g[0] for g in GENERIC_SITES]),
                         ("email alert", [a[0] for a in ALERT_SENDERS]), ("job board", [b[1] for b in OPEN_BOARDS])]:
         for label in labels:
@@ -1992,7 +2023,7 @@ def main():
              + list(adapter_brattle()) + list(adapter_moodys())
              + list(adapter_cgd()) + list(adapter_safra()) + list(adapter_ifo())
              + list(adapter_wto_page()) + list(adapter_economist()) + list(adapter_generic())
-             + list(adapter_afdb()) + list(adapter_avenir()) + list(adapter_mnb())
+             + list(adapter_afdb()) + list(adapter_avenir()) + list(adapter_mnb()) + list(adapter_rss())
              + list(adapter_impactpool()) + list(adapter_reliefweb())
              + list(adapter_cagi()) + list(adapter_imap())
              + list(adapter_open_boards())

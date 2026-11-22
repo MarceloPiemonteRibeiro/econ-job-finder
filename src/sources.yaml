@@ -101,7 +101,7 @@ sources:
   - {name: "UNU-WIDER", url: "https://www.wider.unu.edu/opportunities", type: html, note: "Helsinki. Development economics research.", status: directly, how: "dedicated"}
   - {name: "UNU-MERIT", url: "https://www.merit.unu.edu/about-us/vacancies/", type: html, note: "Maastricht. Innovation economics — your angle.", status: blocked, how: "JS app"}
   - {name: "United Nations University", url: "https://careers.unu.edu/", type: html, note: "Global. Central UNU careers portal.", status: directly, how: "dedicated adapter"}
-  - {name: "FAO", url: "https://www.fao.org/employment/home/en/", type: html, note: "Rome. Ag/dev/environmental econ. Partially covered via UNjobs.", status: blocked, how: "JS app · partial via UNjobs"}
+  - {name: "FAO", url: "https://jobs.fao.org/careersection/fao_external/joblist.ftl", type: html, note: "Rome. Ag/dev/environmental econ. Taleo careersection RSS feed (econ job-field filter).", status: directly, how: "careersection RSS"}
   - {name: "IFAD", url: "https://www.ifad.org/en/careers", type: html, note: "Rome.", status: alert, how: "your alert"}
   - {name: "WFP", url: "https://wfp.wd3.myworkdayjobs.com/job_openings", type: workday, note: "Rome.", status: directly, how: "Workday API"}
   - {name: "UNIDO", url: "https://www.unido.org/careers", type: html, note: "Vienna. Industrial development.", status: alert, how: "your alert"}
