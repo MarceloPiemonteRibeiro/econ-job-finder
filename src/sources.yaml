@@ -41,6 +41,8 @@ sources:
   # POLICY / IO / DEVELOPMENT AGGREGATORS
   # ═══════════════════════════════════════════════════════════
   - {name: "UNjobs", url: "https://unjobs.org/", type: html, note: "Filter 'economist'/'research'.", status: directly, how: "aggregator"}
+  - {name: "UNtalent", url: "https://untalent.org/jobs", type: html, note: "UN-system aggregator. Scraped with econ search terms.", status: directly, how: "aggregator"}
+  - {name: "UNjobNet", url: "https://www.unjobnet.org/jobs", type: html, note: "UN-system aggregator. Scraped with econ search terms.", status: directly, how: "aggregator"}
   - {name: "UN Hiring Index", url: "https://unvacancies.org/un-hiring-index", type: html, status: alert, how: "your alert"}
   - {name: "Impactpool", url: "https://www.impactpool.org/jobs", type: html, note: "Major UN/IO board.", status: directly, how: "aggregator"}
   - {name: "Devex", url: "https://www.devex.com/jobs/search", type: html, note: "International development.", status: alert, how: "IMAP (needs signup) · Pre-wired, needs your email alert signup"}

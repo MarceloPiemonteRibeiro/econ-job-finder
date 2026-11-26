@@ -326,6 +326,51 @@ def adapter_rss():
                    "title": title[:130], "loc": loc, "deadline": "", "url": url, "scan": title.lower()}
 
 
+UN_AGG_TERMS = ["economist", "economics", "economic affairs", "trade"]
+
+
+def adapter_untalent(cap=60):
+    # UNtalent: UN-system aggregator. /jobs/{slug} links, title in link text, ?search= filter.
+    seen = set(); n = 0
+    for term in UN_AGG_TERMS:
+        if n >= cap:
+            break
+        h = curl_get("https://untalent.org/jobs?search=" + urllib.parse.quote(term)) or ""
+        for m in re.finditer(r'href="https://untalent\.org/jobs/([a-z0-9][a-z0-9-]+)"[^>]*>(.*?)</a>', h, re.S):
+            slug = m.group(1)
+            title = html.unescape(re.sub(r"<[^>]+>", " ", m.group(2))).strip()
+            if slug in seen or slug.startswith(("in-", "at-")) or slug == "search":
+                continue
+            if not title or not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+                continue
+            seen.add(slug); n += 1
+            yield {"source": "UNtalent", "org": "UNtalent", "ext_id": slug, "title": title[:130],
+                   "loc": "", "deadline": "", "url": "https://untalent.org/jobs/" + slug, "scan": title.lower()}
+            if n >= cap:
+                break
+
+
+def adapter_unjobnet(cap=60):
+    # UNjobNet: UN-system aggregator. /jobs/detail/{slug}-{id} links, title in link text, ?search= filter.
+    seen = set(); n = 0
+    for term in UN_AGG_TERMS:
+        if n >= cap:
+            break
+        h = curl_get("https://www.unjobnet.org/jobs?search=" + urllib.parse.quote(term)) or ""
+        for m in re.finditer(r'href="(/jobs/detail/[a-z0-9-]+?-(\d+))"[^>]*>(.*?)</a>', h, re.S):
+            href, jid = m.group(1), m.group(2)
+            title = html.unescape(re.sub(r"<[^>]+>", " ", m.group(3))).strip()
+            if jid in seen:
+                continue
+            if not title or not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+                continue
+            seen.add(jid); n += 1
+            yield {"source": "UNjobNet", "org": "UNjobNet", "ext_id": jid, "title": title[:130],
+                   "loc": "", "deadline": "", "url": "https://www.unjobnet.org" + href, "scan": title.lower()}
+            if n >= cap:
+                break
+
+
 MAXPAGES = 8   # paginate aggregators up to this many pages; stop early when a page adds nothing new
 
 
@@ -1508,7 +1553,7 @@ def classify(it):
     if re.search(r"universit|college|school of|faculty of", org, re.I) and src not in ("ReliefWeb",):
         return "Academic"
     # IOs / UN system — but not if org is a multilateral bank
-    if _IO_UN.search(org) or src in ("ReliefWeb", "Impactpool", "UNjobs"):
+    if _IO_UN.search(org) or src in ("ReliefWeb", "Impactpool", "UNjobs", "UNtalent", "UNjobNet"):
         return "IO/UN"
     if org in ("WFP", "IPCC", "IRENA"):
         return "IO/UN"
@@ -1644,7 +1689,8 @@ def parse_sources():
 # ── dashboard: tracking status per source ───────────────────────────────────
 # Labels of the hand-written adapters wired in main() — keep in sync. The Workday / SmartRecruiters /
 # GENERIC_SITES / ALERT_SENDERS / OPEN_BOARDS labels are read from their own lists.
-AGGREGATORS = ["UNjobs", "jobs.ac.uk", "Inomics", "Euraxess", "Impactpool", "ReliefWeb", "CAGI", "Economist Jobs"]
+AGGREGATORS = ["UNjobs", "jobs.ac.uk", "Inomics", "Euraxess", "Impactpool", "ReliefWeb", "CAGI", "Economist Jobs",
+               "UNtalent", "UNjobNet"]
 PAGE_ADAPTERS = ["EBRD", "CEB", "AIIB", "ADB", "BSTDB", "BIS", "HKMA", "J-PAL", "UNU-WIDER", "Bank of Finland",
                  "CEPAL", "WZB", "Ecorys", "CRA", "CREI", "SIAW", "WTO", "UNU", "CMCC",
                  "Brattle", "Moodys", "CGD", "Safra", "ifo", "AfDB", "Avenir Suisse", "MNB (Hungary)"]
@@ -2025,6 +2071,7 @@ def main():
              + list(adapter_wto_page()) + list(adapter_economist()) + list(adapter_generic())
              + list(adapter_afdb()) + list(adapter_avenir()) + list(adapter_mnb()) + list(adapter_rss())
              + list(adapter_impactpool()) + list(adapter_reliefweb())
+             + list(adapter_untalent()) + list(adapter_unjobnet())
              + list(adapter_cagi()) + list(adapter_imap())
              + list(adapter_open_boards())
              + list(adapter_ejm()) + list(adapter_joe()))
