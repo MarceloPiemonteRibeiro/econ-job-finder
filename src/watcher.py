@@ -330,28 +330,37 @@ UN_AGG_TERMS = ["economist", "economics", "economic affairs", "trade"]
 
 
 def adapter_untalent(cap=60):
-    # UNtalent: UN-system aggregator. /jobs/{slug} links, title in link text, ?search= filter.
+    # UNtalent: UN-system aggregator. Title in <h1><a .../jobs/{slug}>; employer link above it;
+    # location in the following <div class="locations">: <a>City</a> (<a>Country</a>).
     seen = set(); n = 0
     for term in UN_AGG_TERMS:
         if n >= cap:
             break
         h = curl_get("https://untalent.org/jobs?search=" + urllib.parse.quote(term)) or ""
-        for m in re.finditer(r'href="https://untalent\.org/jobs/([a-z0-9][a-z0-9-]+)"[^>]*>(.*?)</a>', h, re.S):
+        for m in re.finditer(r'<h1>\s*<a\s+href="https://untalent\.org/jobs/([a-z0-9][a-z0-9-]+)"[^>]*>(.*?)</a>', h, re.S):
             slug = m.group(1)
             title = html.unescape(re.sub(r"<[^>]+>", " ", m.group(2))).strip()
-            if slug in seen or slug.startswith(("in-", "at-")) or slug == "search":
-                continue
-            if not title or not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+            if slug in seen or not title or not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
                 continue
             seen.add(slug); n += 1
-            yield {"source": "UNtalent", "org": "UNtalent", "ext_id": slug, "title": title[:130],
-                   "loc": "", "deadline": "", "url": "https://untalent.org/jobs/" + slug, "scan": title.lower()}
+            tail = h[m.end():m.end() + 900]
+            lm = re.search(r'class="locations".*?<a[^>]*>\s*([^<]+?)\s*</a>'
+                           r'(?:.*?class="details">\s*\(<a[^>]*>\s*([^<]+?)\s*</a>)?', tail, re.S)
+            loc = ""
+            if lm:
+                loc = html.unescape(lm.group(1)).strip() + ((", " + html.unescape(lm.group(2)).strip()) if lm.group(2) else "")
+            pre = h[max(0, m.start() - 320):m.start()]
+            orgs = re.findall(r'>\s*([A-Z][^<>]{3,70}?)\s*</a>', pre)
+            org = html.unescape(orgs[-1]).strip() if orgs else "UNtalent"
+            yield {"source": "UNtalent", "org": org, "ext_id": slug, "title": title[:130],
+                   "loc": loc, "deadline": "", "url": "https://untalent.org/jobs/" + slug, "scan": title.lower()}
             if n >= cap:
                 break
 
 
 def adapter_unjobnet(cap=60):
-    # UNjobNet: UN-system aggregator. /jobs/detail/{slug}-{id} links, title in link text, ?search= filter.
+    # UNjobNet: UN-system aggregator. /jobs/detail/{slug}-{id}; real employer in /organizations/ link
+    # and location in /countries/ links right after the title.
     seen = set(); n = 0
     for term in UN_AGG_TERMS:
         if n >= cap:
@@ -360,13 +369,19 @@ def adapter_unjobnet(cap=60):
         for m in re.finditer(r'href="(/jobs/detail/[a-z0-9-]+?-(\d+))"[^>]*>(.*?)</a>', h, re.S):
             href, jid = m.group(1), m.group(2)
             title = html.unescape(re.sub(r"<[^>]+>", " ", m.group(3))).strip()
-            if jid in seen:
-                continue
-            if not title or not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
+            if jid in seen or not title or not ROLE_RE.search(title) or INTERN_EXCLUDE.search(title):
                 continue
             seen.add(jid); n += 1
-            yield {"source": "UNjobNet", "org": "UNjobNet", "ext_id": jid, "title": title[:130],
-                   "loc": "", "deadline": "", "url": "https://www.unjobnet.org" + href, "scan": title.lower()}
+            tail = h[m.end():m.end() + 700]
+            om = re.search(r'href="/organizations/[^"]+"[^>]*>\s*([^<]+?)\s*</a>', tail)
+            lm = re.search(r'href="/countries/[^"]+">\s*([^<]+?)\s*</a>'
+                           r'(?:\s*\(<a[^>]*href="/countries/[^"]+">\s*([^<]+?)\s*</a>\))?', tail)
+            org = html.unescape(om.group(1)).strip() if om else "UNjobNet"
+            loc = ""
+            if lm:
+                loc = html.unescape(lm.group(1)).strip() + ((", " + html.unescape(lm.group(2)).strip()) if lm.group(2) else "")
+            yield {"source": "UNjobNet", "org": org, "ext_id": jid, "title": title[:130],
+                   "loc": loc, "deadline": "", "url": "https://www.unjobnet.org" + href, "scan": title.lower()}
             if n >= cap:
                 break
 
